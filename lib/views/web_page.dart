@@ -9,7 +9,7 @@ class WebPage extends StatefulWidget {
 }
 
 class _WebPageState extends State<WebPage> {
-  String url = "http://192.168.70.100:5173/";
+  String url = "http://192.168.8.122:5173/";
 
   @override
   Widget build(BuildContext context) {

@@ -17,7 +17,7 @@ class Webview extends StatefulWidget {
 
 class _WebviewState extends State<Webview> {
   late final WebViewController _controller;
-  late final jssdk;
+  late final Jssdk jssdk;
 
   @override
   void initState() {
@@ -51,22 +51,11 @@ class _WebviewState extends State<Webview> {
             debugPrint('WebView is loading (progress : $progress%)');
           },
           onPageStarted: (String url) {
-            // controller.runJavaScript('window.onMaxrockyReady()');
-            // controller.runJavaScriptReturningResult('navigator.userAgent').then((Object userAgent) {
-            //   controller.setUserAgent("maxrocky");
-            //   // print(['runJavaScriptReturningResult', currentUserAgent]);
-            // });
             debugPrint('Page started loading: $url');
           },
           onPageFinished: (String url) {
             debugPrint('Page finished loading: $url');
-            controller.runJavaScript("""
-      try {
-        window.onMaxrockyReady();
-      } catch (err) {
-        console.error(err)
-      }
-""");
+            jssdk.onMaxrockyReady();
           },
           onWebResourceError: (WebResourceError error) {
             debugPrint('''
@@ -101,13 +90,6 @@ Page resource error:
           } catch (e) {
             print(['序列化H5消息异常', e]);
           }
-          // print(['object', mes.methodName]);
-
-          // __maxrockyWebViewJavascriptBridgeCallBack__
-
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(content: Text(message.message)),
-          // );
         },
       )
       ..loadRequest(Uri.parse(widget.url));

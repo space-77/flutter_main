@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/views/web_page.dart';
 
+// adb connect 192.168.8.100:41599
+
 void main() {
   runApp(const MyApp());
 }
