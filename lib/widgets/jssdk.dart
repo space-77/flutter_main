@@ -1,9 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/types/bridgeValue.dart';
 import 'package:flutter_main/types/postMessage.dart';
+import 'package:flutter_main/views/qrCodeView.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,6 +44,9 @@ class Jssdk {
         break;
       case MethodName.clearLocalStroge:
         clearLocalStroge(event);
+        break;
+      case MethodName.qrcode:
+        qrcode(event);
         break;
       default:
     }
@@ -129,5 +132,15 @@ class Jssdk {
 
     await Future.wait(waitList);
     _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "true"));
+  }
+
+  qrcode(MaxRockyMes event) async {
+    final sessionId = event.sessionId;
+
+    final res = await Navigator.of(navigatorKey.currentState!.context).push(MaterialPageRoute(
+      builder: (context) => const QrCodeView(),
+    ));
+
+    _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "'${res ?? ''}'"));
   }
 }

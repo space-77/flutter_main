@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_main/types/postMessage.dart';
 import 'package:flutter_main/widgets/jssdk.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -19,7 +18,6 @@ class Webview extends StatefulWidget {
 class _WebviewState extends State<Webview> {
   late final WebViewController _controller;
   late final Jssdk jssdk;
-  String? userAgent;
 
   @override
   void initState() {
@@ -40,22 +38,12 @@ class _WebviewState extends State<Webview> {
     jssdk = Jssdk(controller);
     // #enddocregion platform_features
 
-    // print(['object', controller.setUserAgent('userAgent')]);
-
-    if (userAgent != null) {}
-
     controller
-      // ..setUserAgent('maxrocky')
-      // ..set
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (String url) {
-            debugPrint('Page started loading: $url');
-          },
           onPageFinished: (String url) {
-            debugPrint('Page finished loading: $url');
             jssdk.onMaxrockyReady();
           },
           onWebResourceError: (WebResourceError error) {
@@ -66,17 +54,6 @@ Page resource error:
   errorType: ${error.errorType}
   isForMainFrame: ${error.isForMainFrame}
           ''');
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            if (request.url.startsWith(widget.url)) {
-              debugPrint('blocking navigation to ${request.url}');
-              return NavigationDecision.prevent;
-            }
-            debugPrint('allowing navigation to ${request.url}');
-            return NavigationDecision.navigate;
-          },
-          onUrlChange: (UrlChange change) {
-            debugPrint('url change to ${change.url}');
           },
         ),
       )

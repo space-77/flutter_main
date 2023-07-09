@@ -4,6 +4,7 @@ enum MethodName {
   removeLocalStroge('removeLocalStroge'),
   clearLocalStroge('clearLocalStroge'),
   deviceInfo('deviceInfo'),
+  qrcode('qrcode'),
   reLoad('reLoad');
 
   final String name;
@@ -36,6 +37,8 @@ class MaxRockyMes {
         break;
       case 'deviceInfo':
         methodName = MethodName.deviceInfo;
+      case 'qrcode':
+        methodName = MethodName.qrcode;
         break;
       case 'reLoad':
         methodName = MethodName.reLoad;
