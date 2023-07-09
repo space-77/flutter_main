@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_main/types/postMessage.dart';
-import 'package:flutter_main/widgets/methods.dart';
+import 'package:flutter_main/widgets/jssdk.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -18,6 +19,7 @@ class Webview extends StatefulWidget {
 class _WebviewState extends State<Webview> {
   late final WebViewController _controller;
   late final Jssdk jssdk;
+  String? userAgent;
 
   @override
   void initState() {
@@ -40,6 +42,8 @@ class _WebviewState extends State<Webview> {
 
     // print(['object', controller.setUserAgent('userAgent')]);
 
+    if (userAgent != null) {}
+
     controller
       // ..setUserAgent('maxrocky')
       // ..set
@@ -47,9 +51,6 @@ class _WebviewState extends State<Webview> {
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (int progress) {
-            debugPrint('WebView is loading (progress : $progress%)');
-          },
           onPageStarted: (String url) {
             debugPrint('Page started loading: $url');
           },
@@ -82,11 +83,15 @@ Page resource error:
 
       // 接收 H5 的通知
       ..addJavaScriptChannel(
-        'maxrocky',
+        'maxrockyJsbridge',
         onMessageReceived: (JavaScriptMessage message) {
           try {
-            final mes = MaxRockyMes.fromJson(json.decode(message.message));
-            jssdk.handler(mes);
+            final msg = MaxRockyMes.fromJson(json.decode(message.message));
+            if (msg.methodName == MethodName.reLoad) {
+              controller.loadRequest(Uri.parse(widget.url));
+            } else {
+              jssdk.handler(msg);
+            }
           } catch (e) {
             print(['序列化H5消息异常', e]);
           }

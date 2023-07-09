@@ -1,5 +1,10 @@
 enum MethodName {
-  deviceInfo('deviceInfo');
+  setLocalStorage('setLocalStorage'),
+  getLocalStorage('getLocalStorage'),
+  removeLocalStroge('removeLocalStroge'),
+  clearLocalStroge('clearLocalStroge'),
+  deviceInfo('deviceInfo'),
+  reLoad('reLoad');
 
   final String name;
   const MethodName(this.name);
@@ -17,8 +22,23 @@ class MaxRockyMes {
     sessionId = json['sessionId'];
 
     switch (json['methodName']) {
+      case 'setLocalStorage':
+        methodName = MethodName.setLocalStorage;
+        break;
+      case 'getLocalStorage':
+        methodName = MethodName.getLocalStorage;
+        break;
+      case 'removeLocalStroge':
+        methodName = MethodName.removeLocalStroge;
+        break;
+      case 'clearLocalStroge':
+        methodName = MethodName.clearLocalStroge;
+        break;
       case 'deviceInfo':
         methodName = MethodName.deviceInfo;
+        break;
+      case 'reLoad':
+        methodName = MethodName.reLoad;
         break;
       default:
     }
