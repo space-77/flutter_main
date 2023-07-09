@@ -134,6 +134,7 @@ class Jssdk {
     _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "true"));
   }
 
+  /// 扫码
   qrcode(MaxRockyMes event) async {
     final sessionId = event.sessionId;
 

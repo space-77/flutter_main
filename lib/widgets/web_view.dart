@@ -8,8 +8,8 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 class Webview extends StatefulWidget {
-  String url;
-  Webview({Key? key, required this.url}) : super(key: key);
+  final String url;
+  const Webview({Key? key, required this.url}) : super(key: key);
 
   @override
   _WebviewState createState() => _WebviewState();
