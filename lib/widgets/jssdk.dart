@@ -138,9 +138,11 @@ class Jssdk {
   qrcode(MaxRockyMes event) async {
     final sessionId = event.sessionId;
 
-    final res = await Navigator.of(navigatorKey.currentState!.context).push(MaterialPageRoute(
-      builder: (context) => const QrCodeView(),
-    ));
+    final res = await Navigator.of(navigatorKey.currentState!.context).push(
+      MaterialPageRoute(
+        builder: (context) => const QrCodeView(),
+      ),
+    );
 
     _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "'${res ?? ''}'"));
   }
