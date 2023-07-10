@@ -1,4 +1,5 @@
 enum MethodName {
+  assets('assets'),
   setLocalStorage('setLocalStorage'),
   getLocalStorage('getLocalStorage'),
   removeLocalStroge('removeLocalStroge'),

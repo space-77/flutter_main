@@ -36,15 +36,12 @@ dependencies:
   cupertino_icons: ^1.0.2
   shared_preferences: ^2.2.0
   qr_code_scanner: ^1.0.1
-  shelf_static: ^1.1.2
-
-  # local_assets_server: ^2.0.2+12
+  flutter_inappwebview: ^6.0.0-beta.24+1
   mime: ^1.0.4
   path: ^1.8.3
-  flutter_inappwebview: ^6.0.0-beta.24+1
-  url_launcher: ^6.1.12
 
 dev_dependencies:
+
   flutter_test:
     sdk: flutter
 
@@ -70,15 +67,6 @@ flutter:
   assets:
     # 前端资源包目录
     - assets/www/
-    - assets/www/js/
-    - assets/www/static/
-    - assets/www/static/css/
-    - assets/www/static/fonts/
-    - assets/www/static/img/
-    - assets/www/static/js/
-    - assets/www/static/lib/
-    - assets/www/static/theme/
-    - assets/www/static/theme/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,16 +1,22 @@
 import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_main/config/config.dart';
+import 'package:flutter_main/widgets/jssdk_api.dart';
 
-class InAppWebViewExampleScreen extends StatefulWidget {
+class InAppWebiew extends StatefulWidget {
+  const InAppWebiew({Key? key}) : super(key: key);
+
   @override
-  _InAppWebViewExampleScreenState createState() => new _InAppWebViewExampleScreenState();
+  _InAppWebiewState createState() => _InAppWebiewState();
 }
 
-class _InAppWebViewExampleScreenState extends State<InAppWebViewExampleScreen> {
+class _InAppWebiewState extends State<InAppWebiew> {
   final GlobalKey webViewKey = GlobalKey();
+
+  late final JssdkApi jssdk;
 
   InAppWebViewController? webViewController;
 
@@ -70,33 +76,19 @@ class _InAppWebViewExampleScreenState extends State<InAppWebViewExampleScreen> {
             InAppWebView(
               key: webViewKey,
               // maxrocky://apis.
-              initialUrlRequest: URLRequest(url: WebUri('https://baidu.com')),
+              initialUrlRequest: URLRequest(url: WebUri("$scheme/assets/www/index.html")),
               initialUserScripts: UnmodifiableListView<UserScript>([]),
               pullToRefreshController: pullToRefreshController,
               onWebViewCreated: (controller) {
                 webViewController = controller;
+                jssdk = JssdkApi(controller);
+                jssdk.onMaxrockyReady();
               },
               onLoadStart: (controller, url) {
                 setState(() {
                   this.url = url.toString();
                   urlController.text = this.url;
                 });
-              },
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                var uri = navigationAction.request.url!;
-
-                if (!["http", "https", "file", "chrome", "data", "javascript", "about"].contains(uri.scheme)) {
-                  if (await canLaunchUrl(uri)) {
-                    // Launch the App
-                    await launchUrl(
-                      uri,
-                    );
-                    // and cancel the request
-                    return NavigationActionPolicy.CANCEL;
-                  }
-                }
-
-                return NavigationActionPolicy.ALLOW;
               },
               onLoadStop: (controller, url) async {
                 pullToRefreshController?.endRefreshing();
@@ -111,7 +103,7 @@ class _InAppWebViewExampleScreenState extends State<InAppWebViewExampleScreen> {
                 }
                 setState(() {
                   this.progress = progress / 100;
-                  urlController.text = this.url;
+                  urlController.text = url;
                 });
               },
               onUpdateVisitedHistory: (controller, url, isReload) {
@@ -121,7 +113,11 @@ class _InAppWebViewExampleScreenState extends State<InAppWebViewExampleScreen> {
                 });
               },
               shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
-                print(['onLoadResourceCustomScheme', request.url]);
+                final reqUrl = WebUri('${request.url}');
+                final origin = '${reqUrl.scheme}://${reqUrl.host}';
+                print(['onLoadResourceCustomScheme', origin]);
+                print(['onLoadResourceCustomScheme', origin == scheme]);
+                if (origin == scheme) return jssdk.analyzingScheme(reqUrl.path);
               },
             ),
             progress < 1.0 ? LinearProgressIndicator(value: progress) : Container(),
