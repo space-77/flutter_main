@@ -74,7 +74,12 @@ class JssdkApi {
     try {
       ByteData data = await rootBundle.load(path.replaceFirst('/', ''));
       final mime = lookupMimeType(basename(path));
-      return WebResourceResponse(data: data.buffer.asUint8List(), statusCode: 200, contentType: '$mime; charset=utf-8');
+      return WebResourceResponse(
+          data: data.buffer.asUint8List(),
+          statusCode: 200,
+          reasonPhrase: 'OK',
+          headers: {'Content-Type': '$mime; charset="utf-8"'},
+          contentType: '$mime; charset="utf-8"');
     } catch (e) {
       return WebResourceResponse(statusCode: 404);
     }
