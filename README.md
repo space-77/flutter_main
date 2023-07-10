@@ -2,6 +2,19 @@
 
 H5壳应用
 
+## 已知问题
+### 指定内置在APP的前端资源包路径
+> 前端资源包路径 assets/www/
+
+问题：需要在 [pubspec.yaml](./pubspec.yaml) 文件里的 `assets` 把前端资源包的所有文件夹都定义一遍。  
+eg：
+``` yaml
+flutter:
+  assets:
+    - assets/www/
+    - assets/www/assets/
+```
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

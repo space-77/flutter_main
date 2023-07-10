@@ -46,6 +46,9 @@ class _WebviewState extends State<Webview> {
           onPageFinished: (String url) {
             jssdk.onMaxrockyReady();
           },
+          onUrlChange: (UrlChange change) {
+            debugPrint('url change to ${change.url}');
+          },
           onWebResourceError: (WebResourceError error) {
             debugPrint('''
 Page resource error:
@@ -65,7 +68,7 @@ Page resource error:
           try {
             final msg = MaxRockyMes.fromJson(json.decode(message.message));
             if (msg.methodName == MethodName.reLoad) {
-              controller.loadRequest(Uri.parse(widget.url));
+              controller.reload();
             } else {
               jssdk.handler(msg);
             }

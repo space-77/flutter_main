@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="format-detection" content="telephone=no, email=no" />
+    <meta name="orientation" content="portrait" lk-config />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="application-name" content="绿城 M" />
+    <link rel="apple-touch-icon-precomposed" sizes="58x58" href="logo.png" />
+    <link rel="icon" href="favicon.ico" />
+    <script src="https://cdn.bootcdn.net/ajax/libs/vConsole/3.15.0/vconsole.min.js"></script>
+    <script>
+      new VConsole();
+      console.log(navigator.userAgent);
+    </script>
+    <script src="js/liveplayer-lib.min.js"></script>
+    <title>集团管理驾驶舱</title>
+    <link rel="stylesheet" href="./static/theme/element.min.css" />
+    <script src="./static/lib/flexable.js"></script>
+    <script src="./static/lib/feishu.js"></script>
+    <style media="screen" type="text/css">
+      #app-cockpit-loading {
+        width: 110px;
+        height: 40px;
+        position: absolute;
+        font-size: 50px;
+        line-height: 50px;
+        top: 50%;
+        left: 50%;
+        transform: translateY(-50%) translateX(-50%);
+      }
+
+      #app-cockpit-loading span {
+        display: inline-block;
+        width: 8px;
+        height: 100%;
+        border-radius: 4px;
+        background: lightgreen;
+        -webkit-animation: load 1s ease infinite;
+      }
+
+      @-webkit-keyframes load {
+        0%,
+        100% {
+          height: 20px;
+          background: lightgreen;
+        }
+
+        50% {
+          height: 40px;
+          margin: -10px 0;
+          background: lightblue;
+        }
+      }
+
+      #app-cockpit-loading span:nth-child(2) {
+        -webkit-animation-delay: 0.2s;
+      }
+
+      #app-cockpit-loading span:nth-child(3) {
+        -webkit-animation-delay: 0.4s;
+      }
+
+      #app-cockpit-loading span:nth-child(4) {
+        -webkit-animation-delay: 0.6s;
+      }
+
+      #app-cockpit-loading span:nth-child(5) {
+        -webkit-animation-delay: 0.8s;
+      }
+    </style>
+    <link href="static/css/chunk-01a32d02.5316d6da.css" rel="prefetch" />
+    <link href="static/css/chunk-0404a1c8.77b352c4.css" rel="prefetch" />
+    <link href="static/css/chunk-04b9dbc2.457f20f9.css" rel="prefetch" />
+    <link href="static/css/chunk-06039ca8.2883cff5.css" rel="prefetch" />
+    <link href="static/css/chunk-0779cf69.9ac457da.css" rel="prefetch" />
+    <link href="static/css/chunk-07f87d74.f9ec0b19.css" rel="prefetch" />
+    <link href="static/css/chunk-0934f24f.91dfe957.css" rel="prefetch" />
+    <link href="static/css/chunk-0956a173.7c51daf2.css" rel="prefetch" />
+    <link href="static/css/chunk-0aee5f9c.2c440712.css" rel="prefetch" />
+    <link href="static/css/chunk-0c0a5332.4f1e3898.css" rel="prefetch" />
+    <link href="static/css/chunk-0c2a8d12.c36ce098.css" rel="prefetch" />
+    <link href="static/css/chunk-0e6d365c.2b28db2e.css" rel="prefetch" />
+    <link href="static/css/chunk-0ed72411.e66395ad.css" rel="prefetch" />
+    <link href="static/css/chunk-10298b08.2045a7f7.css" rel="prefetch" />
+    <link href="static/css/chunk-15853109.b80fbda1.css" rel="prefetch" />
+    <link href="static/css/chunk-16572268.5a7646ee.css" rel="prefetch" />
+    <link href="static/css/chunk-1ac06a45.337099e3.css" rel="prefetch" />
+    <link href="static/css/chunk-1e963de7.2d3036b9.css" rel="prefetch" />
+    <link href="static/css/chunk-22094b77.d6774e18.css" rel="prefetch" />
+    <link href="static/css/chunk-228df47a.acefd692.css" rel="prefetch" />
+    <link href="static/css/chunk-22948f0c.00e6f6ab.css" rel="prefetch" />
+    <link href="static/css/chunk-22993d66.9c3694b0.css" rel="prefetch" />
+    <link href="static/css/chunk-240bb1cf.91e95c04.css" rel="prefetch" />
+    <link href="static/css/chunk-2450be8c.a2b4f2c7.css" rel="prefetch" />
+    <link href="static/css/chunk-254cad5c.83fc82f1.css" rel="prefetch" />
+    <link href="static/css/chunk-262273c8.9ff1d25c.css" rel="prefetch" />
+    <link href="static/css/chunk-2882ffdc.6911027b.css" rel="prefetch" />
+    <link href="static/css/chunk-28a2540e.6e583f1b.css" rel="prefetch" />
+    <link href="static/css/chunk-292c70e0.9ae75464.css" rel="prefetch" />
+    <link href="static/css/chunk-2a247d24.5261cbe4.css" rel="prefetch" />
+    <link href="static/css/chunk-2a7cfa9c.a0788733.css" rel="prefetch" />
+    <link href="static/css/chunk-2afd4278.23f95a00.css" rel="prefetch" />
+    <link href="static/css/chunk-2c0cf014.ffedddc2.css" rel="prefetch" />
+    <link href="static/css/chunk-2c668420.6a3a7189.css" rel="prefetch" />
+    <link href="static/css/chunk-2ce6c8c4.3e3f0985.css" rel="prefetch" />
+    <link href="static/css/chunk-2d6c7f8b.30e7c7c0.css" rel="prefetch" />
+    <link href="static/css/chunk-2f657dac.c61f4cbb.css" rel="prefetch" />
+    <link href="static/css/chunk-31c88a61.daab683c.css" rel="prefetch" />
+    <link href="static/css/chunk-35bbdf5e.d5434972.css" rel="prefetch" />
+    <link href="static/css/chunk-38a70877.9152c58a.css" rel="prefetch" />
+    <link href="static/css/chunk-39b76ac8.0c3d5cea.css" rel="prefetch" />
+    <link href="static/css/chunk-3b3ffc3c.e578ea7d.css" rel="prefetch" />
+    <link href="static/css/chunk-42b450ba.cecf5a73.css" rel="prefetch" />
+    <link href="static/css/chunk-460f533e.63f803f8.css" rel="prefetch" />
+    <link href="static/css/chunk-46592b6c.36bab530.css" rel="prefetch" />
+    <link href="static/css/chunk-494ee30e.e783b592.css" rel="prefetch" />
+    <link href="static/css/chunk-4a29d5ea.1ff0df47.css" rel="prefetch" />
+    <link href="static/css/chunk-4b9c54b9.219ab648.css" rel="prefetch" />
+    <link href="static/css/chunk-4bc1d76c.dab2deb9.css" rel="prefetch" />
+    <link href="static/css/chunk-4d0cae8e.3a036ad4.css" rel="prefetch" />
+    <link href="static/css/chunk-4d2d2a14.5754b30a.css" rel="prefetch" />
+    <link href="static/css/chunk-4e945ceb.c4f4c782.css" rel="prefetch" />
+    <link href="static/css/chunk-519162fe.144962ca.css" rel="prefetch" />
+    <link href="static/css/chunk-51cac783.702b3291.css" rel="prefetch" />
+    <link href="static/css/chunk-5484d291.bb5f2719.css" rel="prefetch" />
+    <link href="static/css/chunk-55ae7f92.16d34512.css" rel="prefetch" />
+    <link href="static/css/chunk-58f28614.7985a2ba.css" rel="prefetch" />
+    <link href="static/css/chunk-5a8544ff.238ea08a.css" rel="prefetch" />
+    <link href="static/css/chunk-5d8f9b87.db00a85a.css" rel="prefetch" />
+    <link href="static/css/chunk-5f4d9f55.9d4a6bc9.css" rel="prefetch" />
+    <link href="static/css/chunk-6497b0fb.81e80bc7.css" rel="prefetch" />
+    <link href="static/css/chunk-678036a4.511f3daf.css" rel="prefetch" />
+    <link href="static/css/chunk-6808dad4.5e1f8f70.css" rel="prefetch" />
+    <link href="static/css/chunk-6ab9d076.e18d7986.css" rel="prefetch" />
+    <link href="static/css/chunk-711a1888.d79a8b87.css" rel="prefetch" />
+    <link href="static/css/chunk-73446290.fc71ec39.css" rel="prefetch" />
+    <link href="static/css/chunk-735acb23.45bf3107.css" rel="prefetch" />
+    <link href="static/css/chunk-7401d8dc.a6872927.css" rel="prefetch" />
+    <link href="static/css/chunk-74a81a20.2ea6b3f0.css" rel="prefetch" />
+    <link href="static/css/chunk-754db992.9fff332f.css" rel="prefetch" />
+    <link href="static/css/chunk-75ddf46e.353516eb.css" rel="prefetch" />
+    <link href="static/css/chunk-76ce4cf1.cb3c0eae.css" rel="prefetch" />
+    <link href="static/css/chunk-773027e4.84aba7f3.css" rel="prefetch" />
+    <link href="static/css/chunk-789b3fff.03e93a54.css" rel="prefetch" />
+    <link href="static/css/chunk-7a657364.bde41fd6.css" rel="prefetch" />
+    <link href="static/css/chunk-7d1dd181.bacd85ff.css" rel="prefetch" />
+    <link href="static/css/chunk-7d3851ce.9a31469e.css" rel="prefetch" />
+    <link href="static/css/chunk-7eab85b2.7122ebe3.css" rel="prefetch" />
+    <link href="static/css/chunk-85cf4c94.a2c3b478.css" rel="prefetch" />
+    <link href="static/css/chunk-87777a6a.a31dfbb5.css" rel="prefetch" />
+    <link href="static/css/chunk-8df84cf0.01d5c8f4.css" rel="prefetch" />
+    <link href="static/css/chunk-9311fc42.5e1f8f70.css" rel="prefetch" />
+    <link href="static/css/chunk-978454ac.ca582bae.css" rel="prefetch" />
+    <link href="static/css/chunk-9d728a58.2f09f94c.css" rel="prefetch" />
+    <link href="static/css/chunk-a3b5e836.7bf38c99.css" rel="prefetch" />
+    <link href="static/css/chunk-aab26956.278e00fe.css" rel="prefetch" />
+    <link href="static/css/chunk-b5345270.88cc7794.css" rel="prefetch" />
+    <link href="static/css/chunk-c272d8d2.8036ff20.css" rel="prefetch" />
+    <link href="static/css/chunk-ca47b5a6.18976125.css" rel="prefetch" />
+    <link href="static/css/chunk-cc35dedc.5d26ebe5.css" rel="prefetch" />
+    <link href="static/css/chunk-cd480d42.44986851.css" rel="prefetch" />
+    <link href="static/css/chunk-de108b0e.c88f5ce7.css" rel="prefetch" />
+    <link href="static/css/chunk-e338f7f4.c8678c6c.css" rel="prefetch" />
+    <link href="static/css/chunk-e4189b48.00974bd7.css" rel="prefetch" />
+    <link href="static/css/chunk-e74f3d3a.34e0b4c2.css" rel="prefetch" />
+    <link href="static/css/chunk-f9daa17c.ef63ff23.css" rel="prefetch" />
+    <link href="static/css/chunk-fab62d8e.b4596c53.css" rel="prefetch" />
+    <link href="static/css/chunk-fc7e58b6.563b9745.css" rel="prefetch" />
+    <link href="static/css/chunk-ff769fc8.e9927e8f.css" rel="prefetch" />
+    <link href="static/js/chunk-01a32d02.ac5d979b.js" rel="prefetch" />
+    <link href="static/js/chunk-0404a1c8.01304556.js" rel="prefetch" />
+    <link href="static/js/chunk-04b9dbc2.07cc528c.js" rel="prefetch" />
+    <link href="static/js/chunk-06039ca8.046ad579.js" rel="prefetch" />
+    <link href="static/js/chunk-0779cf69.d462d799.js" rel="prefetch" />
+    <link href="static/js/chunk-07f87d74.c0fdc1fa.js" rel="prefetch" />
+    <link href="static/js/chunk-0934f24f.68f5bbe5.js" rel="prefetch" />
+    <link href="static/js/chunk-0956a173.ea7a6fa4.js" rel="prefetch" />
+    <link href="static/js/chunk-0aee5f9c.199d124e.js" rel="prefetch" />
+    <link href="static/js/chunk-0c0a5332.f1662dbf.js" rel="prefetch" />
+    <link href="static/js/chunk-0c2a8d12.4ec65490.js" rel="prefetch" />
+    <link href="static/js/chunk-0e6d365c.5d6e6dee.js" rel="prefetch" />
+    <link href="static/js/chunk-0ed72411.f77b8c7e.js" rel="prefetch" />
+    <link href="static/js/chunk-10298b08.08e18e6e.js" rel="prefetch" />
+    <link href="static/js/chunk-15853109.d0015373.js" rel="prefetch" />
+    <link href="static/js/chunk-16572268.5ab7974b.js" rel="prefetch" />
+    <link href="static/js/chunk-1ac06a45.5e131535.js" rel="prefetch" />
+    <link href="static/js/chunk-1e963de7.97aa5ba5.js" rel="prefetch" />
+    <link href="static/js/chunk-22094b77.c09d0c68.js" rel="prefetch" />
+    <link href="static/js/chunk-228df47a.8ba8c97b.js" rel="prefetch" />
+    <link href="static/js/chunk-22948f0c.c730ff3c.js" rel="prefetch" />
+    <link href="static/js/chunk-22993d66.d5070d7d.js" rel="prefetch" />
+    <link href="static/js/chunk-240bb1cf.f092b036.js" rel="prefetch" />
+    <link href="static/js/chunk-2450be8c.59c3d83e.js" rel="prefetch" />
+    <link href="static/js/chunk-254cad5c.09232ee0.js" rel="prefetch" />
+    <link href="static/js/chunk-262273c8.e58a7aa7.js" rel="prefetch" />
+    <link href="static/js/chunk-2882ffdc.52de79ff.js" rel="prefetch" />
+    <link href="static/js/chunk-28a2540e.26715eed.js" rel="prefetch" />
+    <link href="static/js/chunk-292c70e0.530a685b.js" rel="prefetch" />
+    <link href="static/js/chunk-2a247d24.ea75d7a1.js" rel="prefetch" />
+    <link href="static/js/chunk-2a7cfa9c.03685f8e.js" rel="prefetch" />
+    <link href="static/js/chunk-2afd4278.45f85f6e.js" rel="prefetch" />
+    <link href="static/js/chunk-2c0cf014.e36a7e9e.js" rel="prefetch" />
+    <link href="static/js/chunk-2c668420.b8c9ca1d.js" rel="prefetch" />
+    <link href="static/js/chunk-2ce6c8c4.a655a516.js" rel="prefetch" />
+    <link href="static/js/chunk-2d0c553a.d22f8d70.js" rel="prefetch" />
+    <link href="static/js/chunk-2d0e2875.9b7029a6.js" rel="prefetch" />
+    <link href="static/js/chunk-2d2091ec.c9adc0b2.js" rel="prefetch" />
+    <link href="static/js/chunk-2d2160ef.2bb166ab.js" rel="prefetch" />
+    <link href="static/js/chunk-2d6c7f8b.dfb78795.js" rel="prefetch" />
+    <link href="static/js/chunk-2f657dac.57b91314.js" rel="prefetch" />
+    <link href="static/js/chunk-31c88a61.7fcedbfc.js" rel="prefetch" />
+    <link href="static/js/chunk-35bbdf5e.34eed88b.js" rel="prefetch" />
+    <link href="static/js/chunk-38a70877.2669ea7d.js" rel="prefetch" />
+    <link href="static/js/chunk-39b76ac8.e33bf891.js" rel="prefetch" />
+    <link href="static/js/chunk-3b3ffc3c.241a2ca7.js" rel="prefetch" />
+    <link href="static/js/chunk-42b450ba.0a5eba0b.js" rel="prefetch" />
+    <link href="static/js/chunk-4468475e.f3cf879e.js" rel="prefetch" />
+    <link href="static/js/chunk-460f533e.efa166f1.js" rel="prefetch" />
+    <link href="static/js/chunk-46592b6c.d9d58a07.js" rel="prefetch" />
+    <link href="static/js/chunk-494ee30e.ddee6d30.js" rel="prefetch" />
+    <link href="static/js/chunk-4a29d5ea.cf4b624d.js" rel="prefetch" />
+    <link href="static/js/chunk-4b9c54b9.d2ccb021.js" rel="prefetch" />
+    <link href="static/js/chunk-4bc1d76c.c2cc1ca1.js" rel="prefetch" />
+    <link href="static/js/chunk-4d0cae8e.790c19e9.js" rel="prefetch" />
+    <link href="static/js/chunk-4d2d2a14.3e77944d.js" rel="prefetch" />
+    <link href="static/js/chunk-4e945ceb.17b85cea.js" rel="prefetch" />
+    <link href="static/js/chunk-519162fe.aad1ebd8.js" rel="prefetch" />
+    <link href="static/js/chunk-51cac783.4480a8ed.js" rel="prefetch" />
+    <link href="static/js/chunk-5484d291.72b25c8b.js" rel="prefetch" />
+    <link href="static/js/chunk-55ae7f92.10b569e1.js" rel="prefetch" />
+    <link href="static/js/chunk-58f28614.9c61bc56.js" rel="prefetch" />
+    <link href="static/js/chunk-5a8544ff.fb29a9e3.js" rel="prefetch" />
+    <link href="static/js/chunk-5d8f9b87.c0f38a04.js" rel="prefetch" />
+    <link href="static/js/chunk-5f4d9f55.23cc01b9.js" rel="prefetch" />
+    <link href="static/js/chunk-6497b0fb.928d1bfa.js" rel="prefetch" />
+    <link href="static/js/chunk-678036a4.49822443.js" rel="prefetch" />
+    <link href="static/js/chunk-6808dad4.37e58a58.js" rel="prefetch" />
+    <link href="static/js/chunk-6ab9d076.c5e160d6.js" rel="prefetch" />
+    <link href="static/js/chunk-711a1888.b8850894.js" rel="prefetch" />
+    <link href="static/js/chunk-73446290.1fa179f5.js" rel="prefetch" />
+    <link href="static/js/chunk-735acb23.00d690ba.js" rel="prefetch" />
+    <link href="static/js/chunk-7401d8dc.d8058ae9.js" rel="prefetch" />
+    <link href="static/js/chunk-74a81a20.77f3deba.js" rel="prefetch" />
+    <link href="static/js/chunk-754db992.64e25417.js" rel="prefetch" />
+    <link href="static/js/chunk-75ddf46e.2bdc8bd1.js" rel="prefetch" />
+    <link href="static/js/chunk-76ce4cf1.d485449a.js" rel="prefetch" />
+    <link href="static/js/chunk-773027e4.e99cec76.js" rel="prefetch" />
+    <link href="static/js/chunk-789b3fff.4a48a908.js" rel="prefetch" />
+    <link href="static/js/chunk-7a657364.59c65724.js" rel="prefetch" />
+    <link href="static/js/chunk-7d1dd181.14d74afa.js" rel="prefetch" />
+    <link href="static/js/chunk-7d3851ce.21141dd3.js" rel="prefetch" />
+    <link href="static/js/chunk-7eab85b2.8e4564ba.js" rel="prefetch" />
+    <link href="static/js/chunk-85cf4c94.25576f57.js" rel="prefetch" />
+    <link href="static/js/chunk-87777a6a.ecbf2475.js" rel="prefetch" />
+    <link href="static/js/chunk-8af7aa2e.64d8d927.js" rel="prefetch" />
+    <link href="static/js/chunk-8df84cf0.b1e67c23.js" rel="prefetch" />
+    <link href="static/js/chunk-9311fc42.7c6c8251.js" rel="prefetch" />
+    <link href="static/js/chunk-978454ac.e08934f0.js" rel="prefetch" />
+    <link href="static/js/chunk-9d728a58.4ffcd838.js" rel="prefetch" />
+    <link href="static/js/chunk-a3b5e836.6ad93763.js" rel="prefetch" />
+    <link href="static/js/chunk-aab26956.48c7ec09.js" rel="prefetch" />
+    <link href="static/js/chunk-b5345270.edcc86b8.js" rel="prefetch" />
+    <link href="static/js/chunk-c272d8d2.69bb7630.js" rel="prefetch" />
+    <link href="static/js/chunk-ca47b5a6.05850a0f.js" rel="prefetch" />
+    <link href="static/js/chunk-cc35dedc.dc6de1ef.js" rel="prefetch" />
+    <link href="static/js/chunk-cd480d42.96131683.js" rel="prefetch" />
+    <link href="static/js/chunk-de108b0e.2d2c67a8.js" rel="prefetch" />
+    <link href="static/js/chunk-e338f7f4.202d6795.js" rel="prefetch" />
+    <link href="static/js/chunk-e4189b48.3bbb69b2.js" rel="prefetch" />
+    <link href="static/js/chunk-e74f3d3a.48fecfd4.js" rel="prefetch" />
+    <link href="static/js/chunk-f9daa17c.bca593a2.js" rel="prefetch" />
+    <link href="static/js/chunk-fab62d8e.3d5ff958.js" rel="prefetch" />
+    <link href="static/js/chunk-fc7e58b6.cf56bd35.js" rel="prefetch" />
+    <link href="static/js/chunk-ff769fc8.8ba4fa8e.js" rel="prefetch" />
+    <link href="static/css/app.aeb4a6a2.css" rel="preload" as="style" />
+    <link
+      href="static/css/chunk-vendors.bf7188b9.css"
+      rel="preload"
+      as="style"
+    />
+    <link href="static/js/app.7bc3bddf.js" rel="preload" as="script" />
+    <link
+      href="static/js/chunk-vendors.9648c808.js"
+      rel="preload"
+      as="script"
+    />
+    <link href="static/css/chunk-vendors.bf7188b9.css" rel="stylesheet" />
+    <link href="static/css/app.aeb4a6a2.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="./static/lib/uni.webview.js"></script>
+    <noscript
+      ><strong
+        >We're sorry but 集团管理驾驶舱 doesn't work properly without JavaScript
+        enabled. Please enable it to continue.</strong
+      ></noscript
+    >
+    <div id="app-cockpit-loading">
+      <span></span> <span></span> <span></span> <span></span> <span></span>
+    </div>
+    <div id="app"></div>
+    <script>
+      window._AMapSecurityConfig = {
+        securityJsCode: "0e53076e32d1304d6862802e2f452252",
+      };
+    </script>
+    <script src="./static/lib/vue.min.js"></script>
+    <script src="./static/lib/vue-router.min.js"></script>
+    <script src="./static/lib/vuex.min.js"></script>
+    <script src="./static/lib/axios.min.js"></script>
+    <script src="./static/lib/element-ui.js"></script>
+    <script src="./static/lib/echarts.min.js"></script>
+    <script src="./static/lib/three.min.js"></script>
+    <script src="static/js/chunk-vendors.9648c808.js"></script>
+    <script src="static/js/app.7bc3bddf.js"></script>
+  </body>
+  <script>
+    window.forceWebGL = true;
+  </script>
+</html>
