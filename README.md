@@ -1,14 +1,21 @@
 # flutter_main
 
-H5壳应用
+H5 壳应用
 
 ## 已知问题
-### 指定内置在APP的前端资源包路径
+
+### 引用 public 文件异常
+
+应用 public 里的资源请求路径异常
+
+### 指定内置在 APP 的前端资源包路径
+
 > 前端资源包路径 assets/www/
 
 问题：需要在 [pubspec.yaml](./pubspec.yaml) 文件里的 `assets` 把前端资源包的所有文件夹都定义一遍。  
 eg：
-``` yaml
+
+```yaml
 flutter:
   assets:
     - assets/www/

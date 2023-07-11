@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_main/common/checkUpgrade.dart';
 import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/views/webiew.dart';
 
@@ -9,6 +10,7 @@ Future main() async {
   // await Permission.camera.request();
   // await Permission.microphone.request();
   // await Permission.storage.request();
+  checkUpgrade();
 
   runApp(const MyApp());
 }

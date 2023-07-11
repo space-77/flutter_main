@@ -39,6 +39,10 @@ dependencies:
   flutter_inappwebview: ^6.0.0-beta.24+1
   mime: ^1.0.4
   path: ^1.8.3
+  flutter_file_downloader: ^1.1.2
+  dio: ^5.2.1+1
+  path_provider: ^2.0.15
+  archive: ^3.3.7
 
 dev_dependencies:
 
@@ -66,7 +70,9 @@ flutter:
   assets:
     # 前端资源包目录
     - assets/www/
-    - assets/www/assets/
+    - assets/www/js/
+    - assets/www/css/
+    - assets/www/img/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

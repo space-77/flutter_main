@@ -21,10 +21,26 @@ class Jssdk {
     return '$strogeKey-$key';
   }
 
+  onEventListener() {
+    controller.addJavaScriptHandler(
+      handlerName: 'postMessage',
+      callback: (args) {
+        try {
+          final String? message = args[0];
+          if (message == null || message == '') return;
+          final event = MaxRockyMes.fromJson(json.decode(message));
+          handler(event);
+        } catch (e) {
+          print(['h5 call flutter error.', e]);
+        }
+      },
+    );
+  }
+
   onMaxrockyReady() {
     controller.evaluateJavascript(source: '''
       try {
-        window.dispatchEvent(new CustomEvent("onMaxrockyReady"));
+        window.dispatchEvent(new CustomEvent("onMaxrockyReady", {detail: { baseScheme: "$schemeBase" }}));
       } catch (err) {
         console.error('webview onready fail. ', err);
       }
@@ -62,7 +78,7 @@ class Jssdk {
     print(['detail.toJson()', detail.toJson()]);
     controller.evaluateJavascript(source: '''
       try{
-        window.dispatchEvent(new CustomEvent("onBridgeCallBack", { detail: ${detail.toJson()} }))
+        window.dispatchEvent(new CustomEvent("onJsBridgeCallBack", { detail: ${detail.toJson()} }))
       } catch (err) {
         console.error('flutter call H5 error. ', err)
       }
@@ -71,7 +87,6 @@ class Jssdk {
 
   Future<WebResourceResponse?> loadAssetsFile(String path) async {
     try {
-      print(['load path', path]);
       ByteData data = await rootBundle.load(path.replaceFirst('/', ''));
       final resData = data.buffer.asUint8List();
       final mimeType = lookupMimeType(basename(path));
@@ -87,8 +102,12 @@ class Jssdk {
     // late final MaxRockyMes req;
     if (isWithin(WEB_ASSETS_PATH, path)) {
       return loadAssetsFile(path);
+    } else if (isWithin(apiPaht, filePaht)) {
+      // apiPaht
+      print(['----------', path]);
+    } else {
+      return loadAssetsFile('$WEB_ASSETS_PATH$path');
     }
-    return null;
   }
 
   /// 获取设备状态栏高度，底部黑条高度，屏幕像素密度比

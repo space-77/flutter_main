@@ -25,6 +25,7 @@ class _WebiewState extends State<Webiew> {
   late ContextMenu contextMenu;
   String url = "";
   double progress = 0;
+  var loadDone = false;
   final urlController = TextEditingController();
 
   @override
@@ -75,14 +76,18 @@ class _WebiewState extends State<Webiew> {
           children: [
             InAppWebView(
               key: webViewKey,
-              // maxrocky://apis.
-              initialUrlRequest: URLRequest(url: WebUri("$scheme/assets/www/index.html")),
+              initialUrlRequest: URLRequest(url: WebUri("http://192.168.70.100:8080")),
+              // initialUrlRequest: URLRequest(url: WebUri("$schemeBase/assets/www/index.html")),
+              initialSettings: InAppWebViewSettings(
+                minimumFontSize: 0, // 设置webview最小字体
+                applicationNameForUserAgent: 'maxrockyWebView',
+              ),
               initialUserScripts: UnmodifiableListView<UserScript>([]),
               pullToRefreshController: pullToRefreshController,
               onWebViewCreated: (controller) {
                 webViewController = controller;
                 jssdk = Jssdk(controller);
-                jssdk.onMaxrockyReady();
+                jssdk.onEventListener();
               },
               onLoadStart: (controller, url) {
                 setState(() {
@@ -100,8 +105,12 @@ class _WebiewState extends State<Webiew> {
               onProgressChanged: (controller, progress) {
                 if (progress == 100) {
                   pullToRefreshController?.endRefreshing();
+
+                  // 修复 多次触发 Ready 方法 问题
+                  if (!loadDone && progress == 100) jssdk.onMaxrockyReady();
                 }
                 setState(() {
+                  loadDone = progress >= 100;
                   this.progress = progress / 100;
                   urlController.text = url;
                 });
@@ -115,7 +124,7 @@ class _WebiewState extends State<Webiew> {
               shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
                 final reqUrl = WebUri('${request.url}');
                 final origin = '${reqUrl.scheme}://${reqUrl.host}';
-                if (origin == scheme) return jssdk.analyzingScheme(reqUrl.path);
+                if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl.path);
                 return null;
               },
             ),
