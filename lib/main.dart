@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_main/config/config.dart';
-import 'package:flutter_main/packages/in_app_webiew.dart';
+import 'package:flutter_main/views/webiew.dart';
 
 // adb connect 192.168.8.100:41599
 
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const InAppWebiew(),
+      home: const Webiew(),
     );
   }
 }

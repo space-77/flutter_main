@@ -1,15 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/types/bridgeValue.dart';
 import 'package:flutter_main/types/postMessage.dart';
 import 'package:flutter_main/views/qrCodeView.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Jssdk {
-  final strogeKey = 'maxrockyH5';
-  final WebViewController controller;
+  final strogeKey = 'maxrockyInApp';
+  final InAppWebViewController controller;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   Jssdk(this.controller);
@@ -19,7 +22,7 @@ class Jssdk {
   }
 
   onMaxrockyReady() {
-    controller.runJavaScript('''
+    controller.evaluateJavascript(source: '''
       try {
         window.dispatchEvent(new CustomEvent("onMaxrockyReady"));
       } catch (err) {
@@ -28,39 +31,64 @@ class Jssdk {
     ''');
   }
 
-  handler(MaxRockyMes event) {
+  handler(MaxRockyMes event) async {
+    late BridgeValue data;
     switch (event.methodName) {
       case MethodName.deviceInfo:
-        getDeviceInfo(event);
+        data = await getDeviceInfo(event);
         break;
       case MethodName.getLocalStorage:
-        getLocalStorage(event);
+        data = await getLocalStorage(event);
         break;
       case MethodName.setLocalStorage:
-        setLocalStorage(event);
+        data = await setLocalStorage(event);
         break;
       case MethodName.removeLocalStroge:
-        removeLocalStroge(event);
+        data = await removeLocalStroge(event);
         break;
       case MethodName.clearLocalStroge:
-        clearLocalStroge(event);
+        data = await clearLocalStroge(event);
         break;
       case MethodName.qrcode:
-        qrcode(event);
+        data = await qrcode(event);
         break;
       default:
+        data = BridgeValue(code: 404, sessionId: event.sessionId);
     }
+    _callH5(data);
   }
 
   _callH5(BridgeValue detail) {
     print(['detail.toJson()', detail.toJson()]);
-    controller.runJavaScript('''
+    controller.evaluateJavascript(source: '''
       try{
         window.dispatchEvent(new CustomEvent("onBridgeCallBack", { detail: ${detail.toJson()} }))
       } catch (err) {
         console.error('flutter call H5 error. ', err)
       }
     ''');
+  }
+
+  Future<WebResourceResponse?> loadAssetsFile(String path) async {
+    try {
+      print(['load path', path]);
+      ByteData data = await rootBundle.load(path.replaceFirst('/', ''));
+      final resData = data.buffer.asUint8List();
+      final mimeType = lookupMimeType(basename(path));
+
+      return WebResourceResponse(data: resData, statusCode: 200, reasonPhrase: 'OK', contentType: mimeType);
+    } catch (e) {
+      debugPrint('load file err. path => $path');
+      return null;
+    }
+  }
+
+  Future<WebResourceResponse?> analyzingScheme(String path) async {
+    // late final MaxRockyMes req;
+    if (isWithin(WEB_ASSETS_PATH, path)) {
+      return loadAssetsFile(path);
+    }
+    return null;
   }
 
   /// 获取设备状态栏高度，底部黑条高度，屏幕像素密度比
@@ -70,7 +98,7 @@ class Jssdk {
     final statusBarHeight = deviceInfo.padding.top;
     final bottomBarHeight = deviceInfo.padding.bottom;
     final data = '{ pixelRatio: $pixelRatio, statusBarHeight:$statusBarHeight, bottomBarHeight: $bottomBarHeight }';
-    _callH5(BridgeValue(code: 0, sessionId: event.sessionId, data: data));
+    return BridgeValue(code: 0, sessionId: event.sessionId, data: data);
   }
 
   /// 存储数据
@@ -81,12 +109,12 @@ class Jssdk {
     final sessionId = event.sessionId;
 
     if (key == null || value == null) {
-      _callH5(BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key or not find value'));
+      return BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key or not find value');
     }
 
     final SharedPreferences prefs = await _prefs;
     prefs.setString(getStrogeKey(key), value);
-    _callH5(BridgeValue(code: 0, sessionId: sessionId));
+    return BridgeValue(code: 0, sessionId: sessionId);
   }
 
   /// 读取数据
@@ -95,12 +123,12 @@ class Jssdk {
     final sessionId = event.sessionId;
 
     if (key == null) {
-      _callH5(BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key'));
+      return BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key');
     }
 
     final SharedPreferences prefs = await _prefs;
-    final data = prefs.getString(getStrogeKey(key!));
-    _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "'$data'"));
+    final data = prefs.getString(getStrogeKey(key));
+    return BridgeValue(code: 0, sessionId: sessionId, data: "'$data'");
   }
 
   /// 移除数据
@@ -109,12 +137,12 @@ class Jssdk {
     final sessionId = event.sessionId;
 
     if (key == null) {
-      _callH5(BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key'));
+      return BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key');
     }
 
     final SharedPreferences prefs = await _prefs;
-    final data = await prefs.remove(getStrogeKey(key!));
-    _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "$data"));
+    final data = await prefs.remove(getStrogeKey(key));
+    return BridgeValue(code: 0, sessionId: sessionId, data: "$data");
   }
 
   /// 清空数据
@@ -131,7 +159,7 @@ class Jssdk {
     }
 
     await Future.wait(waitList);
-    _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "true"));
+    return BridgeValue(code: 0, sessionId: sessionId, data: "true");
   }
 
   /// 扫码
@@ -144,6 +172,6 @@ class Jssdk {
       ),
     );
 
-    _callH5(BridgeValue(code: 0, sessionId: sessionId, data: "'${res ?? ''}'"));
+    return BridgeValue(code: 0, sessionId: sessionId, data: "'${res ?? ''}'");
   }
 }

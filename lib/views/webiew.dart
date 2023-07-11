@@ -4,19 +4,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_main/config/config.dart';
-import 'package:flutter_main/widgets/jssdk_api.dart';
+import 'package:flutter_main/widgets/jssdk.dart';
 
-class InAppWebiew extends StatefulWidget {
-  const InAppWebiew({Key? key}) : super(key: key);
+class Webiew extends StatefulWidget {
+  const Webiew({Key? key}) : super(key: key);
 
   @override
-  _InAppWebiewState createState() => _InAppWebiewState();
+  _WebiewState createState() => _WebiewState();
 }
 
-class _InAppWebiewState extends State<InAppWebiew> {
+class _WebiewState extends State<Webiew> {
   final GlobalKey webViewKey = GlobalKey();
 
-  late final JssdkApi jssdk;
+  late final Jssdk jssdk;
 
   InAppWebViewController? webViewController;
 
@@ -81,7 +81,7 @@ class _InAppWebiewState extends State<InAppWebiew> {
               pullToRefreshController: pullToRefreshController,
               onWebViewCreated: (controller) {
                 webViewController = controller;
-                jssdk = JssdkApi(controller);
+                jssdk = Jssdk(controller);
                 jssdk.onMaxrockyReady();
               },
               onLoadStart: (controller, url) {
@@ -115,9 +115,8 @@ class _InAppWebiewState extends State<InAppWebiew> {
               shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
                 final reqUrl = WebUri('${request.url}');
                 final origin = '${reqUrl.scheme}://${reqUrl.host}';
-                print(['onLoadResourceCustomScheme', origin]);
-                print(['onLoadResourceCustomScheme', origin == scheme]);
                 if (origin == scheme) return jssdk.analyzingScheme(reqUrl.path);
+                return null;
               },
             ),
             progress < 1.0 ? LinearProgressIndicator(value: progress) : Container(),
