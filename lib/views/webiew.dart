@@ -4,10 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_main/config/config.dart';
+import 'package:flutter_main/types/webDirInfo.dart';
 import 'package:flutter_main/widgets/jssdk.dart';
 
 class Webiew extends StatefulWidget {
-  const Webiew({Key? key}) : super(key: key);
+  final WebDirInfo indexDir;
+  const Webiew(this.indexDir, {Key? key}) : super(key: key);
 
   @override
   _WebiewState createState() => _WebiewState();
@@ -74,10 +76,21 @@ class _WebiewState extends State<Webiew> {
       Expanded(
         child: Stack(
           children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              child: Text(
+                widget.indexDir.version.toString(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ),
             InAppWebView(
               key: webViewKey,
               initialUrlRequest: URLRequest(url: WebUri("http://192.168.70.100:8080")),
-              // initialUrlRequest: URLRequest(url: WebUri("$schemeBase/assets/www/index.html")),
+              // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
               initialSettings: InAppWebViewSettings(
                 minimumFontSize: 0, // 设置webview最小字体
                 applicationNameForUserAgent: 'maxrockyWebView',
@@ -86,7 +99,7 @@ class _WebiewState extends State<Webiew> {
               pullToRefreshController: pullToRefreshController,
               onWebViewCreated: (controller) {
                 webViewController = controller;
-                jssdk = Jssdk(controller);
+                jssdk = Jssdk(controller, widget.indexDir);
                 jssdk.onEventListener();
               },
               onLoadStart: (controller, url) {

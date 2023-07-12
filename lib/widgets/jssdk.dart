@@ -1,21 +1,25 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_main/utils/device_utils.dart';
+import 'package:mime/mime.dart';
+import 'package:nb_utils/nb_utils.dart' as nb;
+import 'package:path/path.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_main/config/config.dart';
+import 'package:flutter_main/types/webDirInfo.dart';
+import 'package:flutter_main/views/qrCodeView.dart';
 import 'package:flutter_main/types/bridgeValue.dart';
 import 'package:flutter_main/types/postMessage.dart';
-import 'package:flutter_main/views/qrCodeView.dart';
-import 'package:mime/mime.dart';
-import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class Jssdk {
   final strogeKey = 'maxrockyInApp';
+  final WebDirInfo indexDir;
   final InAppWebViewController controller;
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  Jssdk(this.controller);
+  Jssdk(this.controller, this.indexDir);
 
   getStrogeKey(String key) {
     return '$strogeKey-$key';
@@ -87,11 +91,16 @@ class Jssdk {
 
   Future<WebResourceResponse?> loadAssetsFile(String path) async {
     try {
-      ByteData data = await rootBundle.load(path.replaceFirst('/', ''));
-      final resData = data.buffer.asUint8List();
+      late final Uint8List data;
+
+      if (indexDir.version == defaultVersion) {
+        data = (await rootBundle.load(join(WEB_ASSETS_PATH, path))).buffer.asUint8List();
+      } else {
+        data = await File(join(indexDir.path, path)).readAsBytes();
+      }
       final mimeType = lookupMimeType(basename(path));
 
-      return WebResourceResponse(data: resData, statusCode: 200, reasonPhrase: 'OK', contentType: mimeType);
+      return WebResourceResponse(data: data, statusCode: 200, reasonPhrase: 'OK', contentType: mimeType);
     } catch (e) {
       debugPrint('load file err. path => $path');
       return null;
@@ -100,14 +109,11 @@ class Jssdk {
 
   Future<WebResourceResponse?> analyzingScheme(String path) async {
     // late final MaxRockyMes req;
-    if (isWithin(WEB_ASSETS_PATH, path)) {
-      return loadAssetsFile(path);
-    } else if (isWithin(apiPaht, filePaht)) {
+    if (isWithin(schemeFilePaht, path)) {
       // apiPaht
       print(['----------', path]);
-    } else {
-      return loadAssetsFile('$WEB_ASSETS_PATH$path');
     }
+    return loadAssetsFile(path.replaceFirst('/', ''));
   }
 
   /// 获取设备状态栏高度，底部黑条高度，屏幕像素密度比
@@ -116,7 +122,15 @@ class Jssdk {
     final pixelRatio = deviceInfo.devicePixelRatio;
     final statusBarHeight = deviceInfo.padding.top;
     final bottomBarHeight = deviceInfo.padding.bottom;
-    final data = '{ pixelRatio: $pixelRatio, statusBarHeight:$statusBarHeight, bottomBarHeight: $bottomBarHeight }';
+    final systemName = nb.operatingSystemName;
+    final data = '''
+      { 
+        pixelRatio: $pixelRatio,
+        systemName: "$systemName",
+        statusBarHeight:$statusBarHeight,
+        bottomBarHeight: $bottomBarHeight
+      }
+    ''';
     return BridgeValue(code: 0, sessionId: event.sessionId, data: data);
   }
 
@@ -131,7 +145,7 @@ class Jssdk {
       return BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key or not find value');
     }
 
-    final SharedPreferences prefs = await _prefs;
+    final prefs = await storage;
     prefs.setString(getStrogeKey(key), value);
     return BridgeValue(code: 0, sessionId: sessionId);
   }
@@ -145,7 +159,7 @@ class Jssdk {
       return BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key');
     }
 
-    final SharedPreferences prefs = await _prefs;
+    final prefs = await storage;
     final data = prefs.getString(getStrogeKey(key));
     return BridgeValue(code: 0, sessionId: sessionId, data: "'$data'");
   }
@@ -159,7 +173,7 @@ class Jssdk {
       return BridgeValue(code: -1, sessionId: sessionId, msg: 'not find key');
     }
 
-    final SharedPreferences prefs = await _prefs;
+    final prefs = await storage;
     final data = await prefs.remove(getStrogeKey(key));
     return BridgeValue(code: 0, sessionId: sessionId, data: "$data");
   }
@@ -168,7 +182,7 @@ class Jssdk {
   clearLocalStroge(MaxRockyMes event) async {
     final sessionId = event.sessionId;
 
-    final SharedPreferences prefs = await _prefs;
+    final prefs = await storage;
 
     /// 只清除webview存储的数据
     final List<Future<bool>> waitList = [];
