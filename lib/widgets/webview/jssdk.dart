@@ -90,6 +90,10 @@ class _Base {
     }
     return loadAssetsFile(path.replaceFirst('/', ''));
   }
+
+  path2Scheme(String url) {
+    return '$schemeBase$schemeFilePaht$url';
+  }
 }
 
 class Jssdk extends _Base {
@@ -122,6 +126,9 @@ class Jssdk extends _Base {
         break;
       case MethodName.openCamera:
         data = await openCamera(event);
+        break;
+      case MethodName.navPop:
+        data = await navPop(event);
         break;
       default:
         data = BridgeValue(code: 404, sessionId: event.sessionId);
@@ -218,7 +225,7 @@ class Jssdk extends _Base {
     final result = await AssetPicker.pickAssets(super.context, pickerConfig: const AssetPickerConfig());
     final photoInfo = result?.map((AssetEntity i) async {
           var path = (await i.originFile)?.absolute.path;
-          if (path != null) path = '"$schemeBase$schemeFilePaht$path"';
+          if (path != null) path = '"${path2Scheme(path)}"';
 
           return '''{
             title: "${i.title}",
@@ -234,13 +241,15 @@ class Jssdk extends _Base {
     return BridgeValue(code: 0, data: data.toString());
   }
 
-  /// 打开相册读取图片
+  /// 打开相机
   openCamera(MaxRockyMes event) async {
-    final photo = await CameraPicker.pickFromCamera(super.context, pickerConfig: const CameraPickerConfig());
+    final photo = await CameraPicker.pickFromCamera(super.context);
 
     if (photo == null) return BridgeValue(code: -1, msg: "take photo fail.");
 
-    final path = (await photo.originFile)?.absolute.path;
+    var path = (await photo.originFile)?.absolute.path;
+    if (path != null) path = '"${path2Scheme(path)}"';
+
     final photoInfo = '''{
       title: "${photo.title}",
       width: ${photo.width},
@@ -250,5 +259,12 @@ class Jssdk extends _Base {
     }''';
 
     return BridgeValue(code: 0, data: photoInfo);
+  }
+
+  /// 返回
+  navPop(MaxRockyMes event) async {
+    Navigator.of(super.context).pop();
+
+    return BridgeValue(code: 0);
   }
 }

@@ -8,6 +8,7 @@ enum MethodName {
   qrcode('qrcode'),
   pickerPhoto('pickerPhoto'),
   openCamera('openCamera'),
+  navPop('navPop'),
   reLoad('reLoad');
 
   final String name;
@@ -48,6 +49,9 @@ class MaxRockyMes {
         break;
       case 'openCamera':
         methodName = MethodName.openCamera;
+        break;
+      case 'navPop':
+        methodName = MethodName.navPop;
         break;
       case 'reLoad':
         methodName = MethodName.reLoad;
