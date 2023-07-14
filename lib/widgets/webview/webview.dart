@@ -71,45 +71,54 @@ class WebviewState extends State<Webview> {
 
   @override
   Widget build(BuildContext context) {
-    return InAppWebView(
-      key: webViewKey,
-      initialUrlRequest: URLRequest(url: WebUri("http://192.168.70.100:8080")),
-      // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
-      initialSettings: InAppWebViewSettings(
-        minimumFontSize: 0, // 设置webview最小字体
-        applicationNameForUserAgent: 'maxrockyWebView',
-      ),
-      initialUserScripts: UnmodifiableListView<UserScript>([]),
-      pullToRefreshController: pullToRefreshController,
-      onWebViewCreated: (controller) {
-        webViewController = controller;
-        jssdk = Jssdk(controller, widget.indexDir);
-        onEventListener();
-      },
-      onLoadStart: (controller, url) {
-        if (widget.onUrlChanged != null) widget.onUrlChanged!(url.toString());
-      },
-      onLoadStop: (controller, url) async {
-        pullToRefreshController?.endRefreshing();
-      },
-      onProgressChanged: (controller, progress) {
-        if (progress == 100) {
-          pullToRefreshController?.endRefreshing();
-          // 修复 多次触发 Ready 方法 问题
-          if (!loadDone && progress == 100) jssdk.onMaxrockyReady();
-        }
+    return WillPopScope(
+      onWillPop: () async {
+        // TODO 返回拦截
+        final res = await webViewController.callAsyncJavaScript(functionBody: '''
 
-        setState(() {
-          loadDone = progress >= 100;
-        });
+        ''');
+        return false;
       },
-      onUpdateVisitedHistory: (controller, url, isReload) {},
-      shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
-        final reqUrl = WebUri('${request.url}');
-        final origin = '${reqUrl.scheme}://${reqUrl.host}';
-        if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl.path);
-        return null;
-      },
+      child: InAppWebView(
+        key: webViewKey,
+        initialUrlRequest: URLRequest(url: WebUri("http://192.168.70.100:8080")),
+        // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
+        initialSettings: InAppWebViewSettings(
+          minimumFontSize: 0, // 设置webview最小字体
+          applicationNameForUserAgent: 'maxrockyWebView',
+        ),
+        initialUserScripts: UnmodifiableListView<UserScript>([]),
+        pullToRefreshController: pullToRefreshController,
+        onWebViewCreated: (controller) {
+          webViewController = controller;
+          jssdk = Jssdk(controller, widget.indexDir);
+          onEventListener();
+        },
+        onLoadStart: (controller, url) {
+          if (widget.onUrlChanged != null) widget.onUrlChanged!(url.toString());
+        },
+        onLoadStop: (controller, url) async {
+          pullToRefreshController?.endRefreshing();
+        },
+        onProgressChanged: (controller, progress) {
+          if (progress == 100) {
+            pullToRefreshController?.endRefreshing();
+            // 修复 多次触发 Ready 方法 问题
+            if (!loadDone && progress == 100) jssdk.onMaxrockyReady();
+          }
+
+          setState(() {
+            loadDone = progress >= 100;
+          });
+        },
+        onUpdateVisitedHistory: (controller, url, isReload) {},
+        shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
+          final reqUrl = WebUri('${request.url}');
+          final origin = '${reqUrl.scheme}://${reqUrl.host}';
+          if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl.path);
+          return null;
+        },
+      ),
     );
   }
 }
