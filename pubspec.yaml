@@ -45,6 +45,9 @@ dependencies:
   archive: ^3.3.7
   version: ^3.0.2
   nb_utils: ^6.0.0
+  logger: ^1.4.0
+  wechat_assets_picker: ^8.5.0
+  wechat_camera_picker: ^3.8.0
 
 dev_dependencies:
 

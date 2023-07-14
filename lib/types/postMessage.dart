@@ -6,6 +6,8 @@ enum MethodName {
   clearLocalStroge('clearLocalStroge'),
   deviceInfo('deviceInfo'),
   qrcode('qrcode'),
+  pickerPhoto('pickerPhoto'),
+  openCamera('openCamera'),
   reLoad('reLoad');
 
   final String name;
@@ -40,6 +42,12 @@ class MaxRockyMes {
         methodName = MethodName.deviceInfo;
       case 'qrcode':
         methodName = MethodName.qrcode;
+        break;
+      case 'pickerPhoto':
+        methodName = MethodName.pickerPhoto;
+        break;
+      case 'openCamera':
+        methodName = MethodName.openCamera;
         break;
       case 'reLoad':
         methodName = MethodName.reLoad;

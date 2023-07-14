@@ -2,9 +2,9 @@ class BridgeValue {
   late int code;
   String? data;
   String? msg;
-  late int sessionId;
+  int? sessionId;
 
-  BridgeValue({required this.sessionId, this.code = 0, this.data, this.msg = '"success"'});
+  BridgeValue({this.sessionId, this.code = 0, this.data, this.msg = '"success"'});
 
   BridgeValue.fromJson(Map<String, dynamic> json) {
     code = json['code'];

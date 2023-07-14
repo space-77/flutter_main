@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/services/client.dart';
 import 'package:flutter_main/types/webDirInfo.dart';
+import 'package:flutter_main/utils/console.dart';
 import 'package:flutter_main/utils/list_utils.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -45,14 +46,18 @@ checkUpgrade(List<WebDirInfo> webAssetsInfoList) async {
   final dirPath = join((await getTemporaryDirectory()).path, 'www');
   final fileName = basename(fileUrl);
 
-  await download(fileUrl, join(dirPath, fileName));
-  final info = unzip(dirPath, fileName);
-  if (info == null) return;
-  final prefs = await storage;
-  prefs.setString(webVersion, info.version.toString());
-  webAssetsInfoList.add(info);
-  final webAssetsList = webAssetsInfoList.map((e) => e.toString()).toList();
-  prefs.setStringList(webAssetsInfoListkey, webAssetsList);
+  try {
+    await download(fileUrl, join(dirPath, fileName));
+    final info = unzip(dirPath, fileName);
+    if (info == null) return;
+    final prefs = await storage;
+    prefs.setString(webVersion, info.version.toString());
+    webAssetsInfoList.add(info);
+    final webAssetsList = webAssetsInfoList.map((e) => e.toString()).toList();
+    prefs.setStringList(webAssetsInfoListkey, webAssetsList);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 Future<WebDirInfo> init() async {
