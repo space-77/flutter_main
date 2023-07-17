@@ -75,12 +75,12 @@ class WebviewState extends State<Webview> {
       onWillPop: () async {
         final res = await webViewController.callAsyncJavaScript(functionBody: '''
             if (window.flutter_inappwebview && typeof window.flutter_inappwebview.onWillPop === 'function' ) {
-              return window.flutter_inappwebview.onWillPop()
+              return window.flutter_inappwebview.onWillPop();
             }
-            return false;
+            return true;
         ''');
 
-        return res?.value ?? false;
+        return res?.value ?? true;
       },
       child: InAppWebView(
         key: webViewKey,
