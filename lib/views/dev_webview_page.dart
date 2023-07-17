@@ -33,7 +33,7 @@ class _DevWebiewPageState extends State<DevWebiewPage> {
               onSubmitted: (value) {
                 var url = WebUri(value);
                 if (url.scheme.isEmpty) url = WebUri('https://www.bing.com/search?q=$value');
-                webviewKey.currentState?.webViewController?.loadUrl(urlRequest: URLRequest(url: url));
+                webviewKey.currentState?.webViewController.loadUrl(urlRequest: URLRequest(url: url));
               },
             ),
             Expanded(child: Webview(widget.indexDir, onUrlChanged: onUrlChanged, key: webviewKey)),

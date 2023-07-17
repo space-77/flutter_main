@@ -68,6 +68,19 @@ class _Base {
     return null;
   }
 
+  Future<WebResourceResponse?> loadFile4Id(String id) async {
+    final asset = await AssetEntity.fromId(id);
+    if (asset == null) return null;
+
+    final data = await (await asset.file)?.readAsBytes();
+    return WebResourceResponse(data: data, statusCode: 200, reasonPhrase: 'OK', contentType: asset.mimeType);
+    // try {
+    // } catch (e) {
+    //   console.error(e);
+    // }
+    // return null;
+  }
+
   Future<WebResourceResponse?> loadFile(String path) async {
     final file = File(path);
 
@@ -85,14 +98,15 @@ class _Base {
 
   Future<WebResourceResponse?> analyzingScheme(String path) async {
     // late final MaxRockyMes req;
-    if (isWithin(schemeFilePaht, path)) {
-      return loadFile(path.replaceFirst(schemeFilePaht, ''));
+    if (isWithin(assetsPaht, path)) {
+      // return loadFile(path.replaceFirst(schemeFilePaht, ''));
+      return loadFile4Id(path.replaceFirst('$assetsPaht/', ''));
     }
     return loadAssetsFile(path.replaceFirst('/', ''));
   }
 
-  path2Scheme(String url) {
-    return '$schemeBase$schemeFilePaht$url';
+  path2AssetScheme(String url) {
+    return '$schemeBase$assetsPaht$url';
   }
 }
 
@@ -128,7 +142,7 @@ class Jssdk extends _Base {
         data = await openCamera(event);
         break;
       case MethodName.navPop:
-        data = await navPop(event);
+        data = navPop(event);
         break;
       default:
         data = BridgeValue(code: 404, sessionId: event.sessionId);
@@ -222,49 +236,88 @@ class Jssdk extends _Base {
 
   /// 打开相册读取图片
   pickerPhoto(MaxRockyMes event) async {
-    final result = await AssetPicker.pickAssets(super.context, pickerConfig: const AssetPickerConfig());
-    final photoInfo = result?.map((AssetEntity i) async {
-          var path = (await i.originFile)?.absolute.path;
-          if (path != null) path = '"${path2Scheme(path)}"';
+    var params = event.params;
+    if (params == '' || params == null) params = '{}';
+    try {
+      final photoParams = PhotoParams.fromJson(json.decode(params));
+      final ids = photoParams.selectedAssetIds;
+      final maxAssets = photoParams.maxAssets ?? 9;
+      final themeColor = photoParams.themeColor;
+      final requestType = photoParams.type;
 
-          return '''{
-            title: "${i.title}",
-            width: ${i.width},
-            height: ${i.height},
-            mimeType: "${i.mimeType}",
-            path: $path
-          }''';
-        }).toList() ??
-        [];
+      final selectedAssetsF = ids?.map((id) => AssetEntity.fromId(id)) ?? [];
+      final selectedAssets = (await Future.wait(selectedAssetsF)).whereType<AssetEntity>().toList();
+      SpecialPickerType? specialPickerType = maxAssets == 1 ? SpecialPickerType.noPreview : null;
 
-    final data = await Future.wait(photoInfo);
-    return BridgeValue(code: 0, data: data.toString());
+      final pickerConfig = AssetPickerConfig(
+        maxAssets: maxAssets,
+        themeColor: themeColor,
+        requestType: requestType,
+        selectedAssets: selectedAssets,
+        keepScrollOffset: true,
+        specialPickerType: specialPickerType,
+      );
+
+      final result = await AssetPicker.pickAssets(super.context, pickerConfig: pickerConfig);
+      final data = result?.map((AssetEntity i) {
+            return '''{
+              id: "${i.id}",
+              title: "${i.title}",
+              width: ${i.width},
+              height: ${i.height},
+              mimeType: "${i.mimeType}",
+              path: "${path2AssetScheme('/${i.id}')}"
+            }''';
+          }).toList() ??
+          [];
+
+      return BridgeValue(code: 0, data: data.toString());
+    } catch (e) {
+      return BridgeValue(code: 500, data: e.toString());
+    }
   }
 
   /// 打开相机
   openCamera(MaxRockyMes event) async {
-    final photo = await CameraPicker.pickFromCamera(super.context);
+    var params = event.params;
+    if (params == '' || params == null) params = '{}';
+
+    final cameraParams = CameraParams.fromJson(json.decode(params));
+    final enableAudio = cameraParams.enableAudio;
+    final enableRecording = cameraParams.enableRecording;
+    final enableTapRecording = cameraParams.enableTapRecording;
+    final onlyEnableRecording = cameraParams.onlyEnableRecording;
+    final minimumRecordingDuration = cameraParams.minimumRecordingDuration;
+    final maximumRecordingDuration = cameraParams.maximumRecordingDuration;
+
+    final pickerConfig = CameraPickerConfig(
+      enableAudio: enableAudio,
+      enableRecording: enableRecording,
+      enableTapRecording: enableTapRecording,
+      onlyEnableRecording: onlyEnableRecording,
+      minimumRecordingDuration: minimumRecordingDuration,
+      maximumRecordingDuration: maximumRecordingDuration,
+    );
+
+    final photo = await CameraPicker.pickFromCamera(super.context, pickerConfig: pickerConfig);
 
     if (photo == null) return BridgeValue(code: -1, msg: "take photo fail.");
 
-    var path = (await photo.originFile)?.absolute.path;
-    if (path != null) path = '"${path2Scheme(path)}"';
-
     final photoInfo = '''{
+      id: "${photo.id}",
       title: "${photo.title}",
       width: ${photo.width},
       height: ${photo.height},
       mimeType: "${photo.mimeType}",
-      path: $path
+      path: "${path2AssetScheme('/${photo.id}')}"
     }''';
 
     return BridgeValue(code: 0, data: photoInfo);
   }
 
   /// 返回
-  navPop(MaxRockyMes event) async {
+  navPop(MaxRockyMes event) {
     Navigator.of(super.context).pop();
-
     return BridgeValue(code: 0);
   }
 }

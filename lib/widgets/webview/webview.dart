@@ -40,9 +40,9 @@ class WebviewState extends State<Webview> {
         : PullToRefreshController(
             onRefresh: () async {
               if (defaultTargetPlatform == TargetPlatform.android) {
-                webViewController?.reload();
+                webViewController.reload();
               } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
-                webViewController?.loadUrl(urlRequest: URLRequest(url: await webViewController?.getUrl()));
+                webViewController.loadUrl(urlRequest: URLRequest(url: await webViewController.getUrl()));
               }
             },
           );
@@ -73,11 +73,14 @@ class WebviewState extends State<Webview> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // TODO 返回拦截
         final res = await webViewController.callAsyncJavaScript(functionBody: '''
-
+            if (window.flutter_inappwebview && typeof window.flutter_inappwebview.onWillPop === 'function' ) {
+              return window.flutter_inappwebview.onWillPop()
+            }
+            return false;
         ''');
-        return false;
+
+        return res?.value ?? false;
       },
       child: InAppWebView(
         key: webViewKey,
