@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_main/utils/color_utils.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 enum MethodName {
+  toast('toast'),
+  reload('reload'),
+  navPop('navPop'),
+  qrcode('qrcode'),
   assets('assets'),
+  deviceInfo('deviceInfo'),
+  openCamera('openCamera'),
+  pickerPhoto('pickerPhoto'),
+  networkInfo('networkInfo'),
+  connectivity('connectivity'),
   setLocalStorage('setLocalStorage'),
   getLocalStorage('getLocalStorage'),
-  removeLocalStroge('removeLocalStroge'),
   clearLocalStroge('clearLocalStroge'),
-  deviceInfo('deviceInfo'),
-  qrcode('qrcode'),
-  pickerPhoto('pickerPhoto'),
-  openCamera('openCamera'),
-  navPop('navPop'),
-  reLoad('reLoad');
+  removeLocalStroge('removeLocalStroge');
 
   final String name;
   const MethodName(this.name);
 }
 
-class MaxRockyMes {
+class WebviewMsg {
   late int sessionId;
+  String? api;
   String? params;
   MethodName? methodName;
 
-  MaxRockyMes({required this.sessionId, this.methodName, this.params});
+  WebviewMsg({required this.sessionId, this.methodName, this.params, this.api});
 
-  MaxRockyMes.fromJson(Map<String, dynamic> json) {
+  WebviewMsg.fromJson(Map<String, dynamic> json) {
+    api = json['methodName'];
     params = json['params'];
     sessionId = json['sessionId'];
 
@@ -57,8 +63,17 @@ class MaxRockyMes {
       case 'navPop':
         methodName = MethodName.navPop;
         break;
-      case 'reLoad':
-        methodName = MethodName.reLoad;
+      case 'toast':
+        methodName = MethodName.toast;
+        break;
+      case 'reload':
+        methodName = MethodName.reload;
+        break;
+      case 'networkInfo':
+        methodName = MethodName.networkInfo;
+        break;
+      case 'connectivity':
+        methodName = MethodName.connectivity;
         break;
       default:
     }
@@ -66,6 +81,7 @@ class MaxRockyMes {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
+    data['api'] = api;
     data['sessionId'] = sessionId;
     data['methodName'] = methodName;
     data['params'] = params;
@@ -94,7 +110,7 @@ class PhotoParams {
 
   PhotoParams.fromJson(Map<String, dynamic> json) {
     maxAssets = json['maxAssets'];
-    themeColor = json['themeColor'] != null ? HexColor.fromHex(json['themeColor']) : null;
+    themeColor = getColor4Hex(json['themeColor']);
     keepScrollOffset = json['keepScrollOffset'] ?? false;
     selectedAssetIds = json['selectedAssetIds']?.cast<String>() ?? [];
 
@@ -163,4 +179,69 @@ class CameraParams {
     data['maximumRecordingDuration'] = maximumRecordingDuration;
     return data;
   }
+}
+
+class ToastParams {
+  late final String msg;
+  late final Color? textColor;
+  late final Color? backgroundColor;
+  late final double? fontSize;
+  late final ToastGravity? position;
+
+  ToastParams({required this.msg, this.textColor, this.backgroundColor, this.fontSize, this.position});
+
+  ToastParams.fromJson(Map<String, dynamic> json) {
+    msg = json['msg'] ?? '';
+    fontSize = json['fontSize'];
+    textColor = getColor4Hex(json['textColor']);
+    backgroundColor = getColor4Hex(json['backgroundColor']);
+
+    switch (json['position']) {
+      case 'top':
+        position = ToastGravity.TOP;
+        break;
+      case 'topLeft':
+        position = ToastGravity.TOP_LEFT;
+        break;
+      case 'topRight':
+        position = ToastGravity.TOP_RIGHT;
+        break;
+      case 'bottom':
+        position = ToastGravity.BOTTOM;
+        break;
+      case 'bottomLeft':
+        position = ToastGravity.BOTTOM_LEFT;
+        break;
+      case 'bottomRight':
+        position = ToastGravity.BOTTOM_RIGHT;
+        break;
+      case 'center':
+        position = ToastGravity.CENTER;
+        break;
+      case 'centerLeft':
+        position = ToastGravity.CENTER_LEFT;
+        break;
+      case 'centerRight':
+        position = ToastGravity.CENTER_RIGHT;
+        break;
+      default:
+        position = ToastGravity.BOTTOM;
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['msg'] = msg;
+    data['fontSize'] = fontSize;
+    data['position'] = position;
+    data['textColor'] = textColor;
+    data['backgroundColor'] = backgroundColor;
+    return data;
+  }
+}
+
+class NetworkItem {
+  final String name;
+  final Future<String?> api;
+  NetworkItem(this.api, this.name);
 }

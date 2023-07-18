@@ -2,6 +2,12 @@
 
 H5 壳应用
 
+## TODO
+1. request
+2. upload
+3. download
+4. 文件预览 open_file
+
 ## 已知问题
 
 ### 引用 public 文件异常

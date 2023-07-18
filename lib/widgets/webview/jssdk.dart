@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_main/utils/console.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mime/mime.dart';
 import 'package:nb_utils/nb_utils.dart' as nb;
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:path/path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_main/config/config.dart';
@@ -97,7 +100,7 @@ class _Base {
   }
 
   Future<WebResourceResponse?> analyzingScheme(String path) async {
-    // late final MaxRockyMes req;
+    // late final WebviewMsg req;
     if (isWithin(assetsPaht, path)) {
       // return loadFile(path.replaceFirst(schemeFilePaht, ''));
       return loadFile4Id(path.replaceFirst('$assetsPaht/', ''));
@@ -114,46 +117,74 @@ class Jssdk extends _Base {
   Jssdk(super.controller, super.indexDir);
 
   /// 来自H5的消息
-  handler(MaxRockyMes event) async {
+  handler(WebviewMsg event) async {
     late BridgeValue data;
-    switch (event.methodName) {
-      case MethodName.deviceInfo:
-        data = await getDeviceInfo(event);
-        break;
-      case MethodName.getLocalStorage:
-        data = await getLocalStorage(event);
-        break;
-      case MethodName.setLocalStorage:
-        data = await setLocalStorage(event);
-        break;
-      case MethodName.removeLocalStroge:
-        data = await removeLocalStroge(event);
-        break;
-      case MethodName.clearLocalStroge:
-        data = await clearLocalStroge(event);
-        break;
-      case MethodName.qrcode:
-        data = await qrcode(event);
-        break;
-      case MethodName.pickerPhoto:
-        data = await pickerPhoto(event);
-        break;
-      case MethodName.openCamera:
-        data = await openCamera(event);
-        break;
-      case MethodName.navPop:
-        data = navPop(event);
-        break;
-      default:
-        data = BridgeValue(code: 404, sessionId: event.sessionId);
+    try {
+      switch (event.methodName) {
+        case MethodName.reload:
+          data = onWebviewReLoad(event);
+          break;
+        case MethodName.deviceInfo:
+          data = getDeviceInfo(event);
+          break;
+        case MethodName.getLocalStorage:
+          data = await getLocalStorage(event);
+          break;
+        case MethodName.setLocalStorage:
+          data = await setLocalStorage(event);
+          break;
+        case MethodName.removeLocalStroge:
+          data = await removeLocalStroge(event);
+          break;
+        case MethodName.clearLocalStroge:
+          data = await clearLocalStroge(event);
+          break;
+        case MethodName.qrcode:
+          data = await qrcode(event);
+          break;
+        case MethodName.pickerPhoto:
+          data = await pickerPhoto(event);
+          break;
+        case MethodName.openCamera:
+          data = await openCamera(event);
+          break;
+        case MethodName.navPop:
+          data = navPop(event);
+          break;
+        case MethodName.toast:
+          data = toast(event);
+          break;
+        case MethodName.networkInfo:
+          data = await getNetworkInfo(event);
+          break;
+        case MethodName.connectivity:
+          data = await getConnectivityInfo(event);
+          break;
+        default:
+          data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "'404. not find'");
+      }
+    } catch (e) {
+      console.error(e);
+      data = BridgeValue(
+        code: 500,
+        sessionId: event.sessionId,
+        error: "`${e.toString()}`",
+        msg: "'Handling information exceptions.'",
+      );
     }
 
+    data.api = "'${event.api}'";
     data.sessionId = event.sessionId;
     _callH5(data);
   }
 
+  BridgeValue onWebviewReLoad(WebviewMsg event) {
+    controller.reload();
+    return BridgeValue(code: 0);
+  }
+
   /// 获取设备状态栏高度，底部黑条高度，屏幕像素密度比
-  getDeviceInfo(MaxRockyMes event) {
+  BridgeValue getDeviceInfo(WebviewMsg event) {
     final deviceInfo = MediaQuery.of(navigatorKey.currentState!.context);
     final pixelRatio = deviceInfo.devicePixelRatio;
     final statusBarHeight = deviceInfo.padding.top;
@@ -171,7 +202,7 @@ class Jssdk extends _Base {
   }
 
   /// 存储数据
-  setLocalStorage(MaxRockyMes event) async {
+  Future<BridgeValue> setLocalStorage(WebviewMsg event) async {
     final info = json.decode(event.params ?? '');
     final key = info['key'];
     final value = info['value'];
@@ -186,7 +217,7 @@ class Jssdk extends _Base {
   }
 
   /// 读取数据
-  getLocalStorage(MaxRockyMes event) async {
+  Future<BridgeValue> getLocalStorage(WebviewMsg event) async {
     final key = event.params;
 
     if (key == null) {
@@ -199,7 +230,7 @@ class Jssdk extends _Base {
   }
 
   /// 移除数据
-  removeLocalStroge(MaxRockyMes event) async {
+  Future<BridgeValue> removeLocalStroge(WebviewMsg event) async {
     final key = event.params;
 
     if (key == null) {
@@ -212,7 +243,7 @@ class Jssdk extends _Base {
   }
 
   /// 清空数据
-  clearLocalStroge(MaxRockyMes event) async {
+  Future<BridgeValue> clearLocalStroge(WebviewMsg event) async {
     final prefs = await storage;
 
     /// 只清除webview存储的数据
@@ -227,7 +258,7 @@ class Jssdk extends _Base {
   }
 
   /// 扫码
-  qrcode(MaxRockyMes event) async {
+  Future<BridgeValue> qrcode(WebviewMsg event) async {
     final route = MaterialPageRoute(builder: (context) => const QrCodeView());
     final res = await Navigator.of(super.context).push(route);
 
@@ -235,7 +266,7 @@ class Jssdk extends _Base {
   }
 
   /// 打开相册读取图片
-  pickerPhoto(MaxRockyMes event) async {
+  Future<BridgeValue> pickerPhoto(WebviewMsg event) async {
     var params = event.params;
     if (params == '' || params == null) params = '{}';
     try {
@@ -278,7 +309,7 @@ class Jssdk extends _Base {
   }
 
   /// 打开相机
-  openCamera(MaxRockyMes event) async {
+  Future<BridgeValue> openCamera(WebviewMsg event) async {
     var params = event.params;
     if (params == '' || params == null) params = '{}';
 
@@ -316,8 +347,88 @@ class Jssdk extends _Base {
   }
 
   /// 返回
-  navPop(MaxRockyMes event) {
+  BridgeValue navPop(WebviewMsg event) {
     Navigator.of(super.context).pop();
     return BridgeValue(code: 0);
+  }
+
+  /// toast
+  BridgeValue toast(WebviewMsg event) {
+    var params = event.params;
+    if (params == '' || params == null) params = '{}';
+    final tosatParams = ToastParams.fromJson(json.decode(params));
+
+    Fluttertoast.showToast(
+      msg: tosatParams.msg,
+      gravity: tosatParams.position,
+      fontSize: tosatParams.fontSize,
+      textColor: tosatParams.textColor,
+      backgroundColor: tosatParams.backgroundColor,
+    );
+
+    return BridgeValue(code: 0);
+  }
+
+  /// 获取网络信息
+  Future<BridgeValue> getNetworkInfo(WebviewMsg event) async {
+    final info = NetworkInfo();
+    NetworkItem(info.getWifiIP(), 'IP');
+    final getList = [
+      NetworkItem(info.getWifiIP(), 'IP'),
+      NetworkItem(info.getWifiIPv6(), 'IPv6'),
+      NetworkItem(info.getWifiName(), 'name'),
+      NetworkItem(info.getWifiBSSID(), 'BSSID'),
+      NetworkItem(info.getWifiSubmask(), 'submask'),
+      NetworkItem(info.getWifiBroadcast(), 'broadcast'),
+      NetworkItem(info.getWifiGatewayIP(), 'gatewayIP'),
+    ];
+
+    var data = '{';
+
+    final res = getList.map((item) async {
+      try {
+        final val = await item.api;
+        data += '${item.name}: "$val",';
+      } catch (e) {
+        data += '${item.name}: undefined,';
+      }
+    });
+    await Future.wait(res);
+    data += '}';
+
+    return BridgeValue(code: 0, data: data);
+  }
+
+  /// 获取网络链接情况
+  Future<BridgeValue> getConnectivityInfo(WebviewMsg event) async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+
+    late final String data;
+
+    switch (connectivityResult) {
+      case ConnectivityResult.mobile:
+        data = 'mobile';
+        break;
+      case ConnectivityResult.wifi:
+        data = 'wifi';
+        break;
+      case ConnectivityResult.ethernet:
+        data = 'ethernet';
+        break;
+      case ConnectivityResult.vpn:
+        data = 'vpn';
+        break;
+      case ConnectivityResult.bluetooth:
+        data = 'bluetooth';
+        break;
+      case ConnectivityResult.other:
+        data = 'other';
+        break;
+      case ConnectivityResult.none:
+      default:
+        data = 'none';
+    }
+
+    return BridgeValue(code: 0, data: "'$data'");
   }
 }

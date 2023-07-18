@@ -55,7 +55,7 @@ class WebviewState extends State<Webview> {
         try {
           final String? message = args[0];
           if (message == null || message == '') return;
-          final event = MaxRockyMes.fromJson(json.decode(message));
+          final event = WebviewMsg.fromJson(json.decode(message));
           jssdk.handler(event);
         } catch (e) {
           console.error(e);
@@ -74,10 +74,10 @@ class WebviewState extends State<Webview> {
     return WillPopScope(
       onWillPop: () async {
         final res = await webViewController.callAsyncJavaScript(functionBody: '''
-            if (window.flutter_inappwebview && typeof window.flutter_inappwebview.onWillPop === 'function' ) {
-              return window.flutter_inappwebview.onWillPop();
-            }
-            return true;
+          if (window.flutter_inappwebview && typeof window.flutter_inappwebview.onWillPop === 'function' ) {
+            return window.flutter_inappwebview.onWillPop();
+          }
+          return true;
         ''');
 
         return res?.value ?? true;
