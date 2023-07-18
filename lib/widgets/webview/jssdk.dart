@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_main/services/client.dart';
 import 'package:flutter_main/utils/console.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mime/mime.dart';
@@ -162,6 +163,9 @@ class Jssdk extends _Base {
           break;
         case MethodName.setNavigationBarColor:
           data = setNavigationBarColor(event);
+          break;
+        case MethodName.request:
+          data = await httpRequest(event);
           break;
         default:
           data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "'404. not find'");
@@ -456,5 +460,15 @@ class Jssdk extends _Base {
     } else {
       return err;
     }
+  }
+
+  Future<BridgeValue> httpRequest(WebviewMsg event) async {
+    var params = event.params;
+    if (params == '' || params == null) params = '{}';
+
+    final config = HttpRequestConfig.fromJson(json.decode(params));
+    final res = await request(config);
+
+    return BridgeValue(code: 0, data: '`${json.encode(res)}`');
   }
 }

@@ -5,6 +5,7 @@ import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 enum MethodName {
   toast('toast'),
+  request('request'),
   reload('reload'),
   navPop('navPop'),
   qrcode('qrcode'),
@@ -78,6 +79,9 @@ class WebviewMsg {
         break;
       case 'setNavigationBarColor':
         methodName = MethodName.setNavigationBarColor;
+        break;
+      case 'request':
+        methodName = MethodName.request;
         break;
       default:
     }
@@ -248,4 +252,35 @@ class NetworkItem {
   final String name;
   final Future<String?> api;
   NetworkItem(this.api, this.name);
+}
+
+class HttpRequestConfig {
+  late final String url;
+  late final String? method;
+  late final Duration? timeout;
+  late final Map<String, dynamic>? data;
+  late final Map<String, dynamic>? params;
+  late final Map<String, dynamic>? headers;
+
+  HttpRequestConfig({required this.url, this.method, this.headers, this.params, this.data, this.timeout});
+
+  HttpRequestConfig.fromJson(Map<String, dynamic> json) {
+    url = json['url'];
+    data = json['data'];
+    method = json['method'];
+    headers = json['headers'];
+    params = json['params'];
+    timeout = json['timeout'] != null ? Duration(milliseconds: json['timeout']) : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['url'] = url;
+    data['method'] = method;
+    data['headers'] = headers;
+    data['params'] = params;
+    data['data'] = this.data;
+    data['timeout'] = timeout;
+    return data;
+  }
 }
