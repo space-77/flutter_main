@@ -7,7 +7,6 @@ H5 壳应用
 2. upload
 3. download
 4. 文件预览 open_file
-5. 设置状态栏颜色
 
 ## 已知问题
 

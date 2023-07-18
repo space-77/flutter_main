@@ -17,7 +17,8 @@ enum MethodName {
   setLocalStorage('setLocalStorage'),
   getLocalStorage('getLocalStorage'),
   clearLocalStroge('clearLocalStroge'),
-  removeLocalStroge('removeLocalStroge');
+  removeLocalStroge('removeLocalStroge'),
+  setNavigationBarColor('setNavigationBarColor');
 
   final String name;
   const MethodName(this.name);
@@ -74,6 +75,9 @@ class WebviewMsg {
         break;
       case 'connectivity':
         methodName = MethodName.connectivity;
+        break;
+      case 'setNavigationBarColor':
+        methodName = MethodName.setNavigationBarColor;
         break;
       default:
     }

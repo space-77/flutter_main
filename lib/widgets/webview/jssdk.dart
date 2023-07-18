@@ -160,6 +160,9 @@ class Jssdk extends _Base {
         case MethodName.connectivity:
           data = await getConnectivityInfo(event);
           break;
+        case MethodName.setNavigationBarColor:
+          data = setNavigationBarColor(event);
+          break;
         default:
           data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "'404. not find'");
       }
@@ -430,5 +433,28 @@ class Jssdk extends _Base {
     }
 
     return BridgeValue(code: 0, data: "'$data'");
+  }
+
+  /// 设置状态栏文字颜色
+  BridgeValue setNavigationBarColor(WebviewMsg event) {
+    final type = event.params;
+    final err = BridgeValue(code: 500, msg: "'The parameter can only be dark or light.'");
+
+    if (type == 'dark' || type == 'light') {
+      late final SystemUiOverlayStyle color;
+      switch (type) {
+        case 'dark':
+          color = SystemUiOverlayStyle.dark;
+        case 'light':
+          color = SystemUiOverlayStyle.light;
+          break;
+        default:
+          return err;
+      }
+      SystemChrome.setSystemUIOverlayStyle(color);
+      return BridgeValue(code: 0);
+    } else {
+      return err;
+    }
   }
 }
