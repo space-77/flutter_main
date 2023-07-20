@@ -6,9 +6,9 @@ import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/services/client.dart';
 import 'package:flutter_main/types/webDirInfo.dart';
 import 'package:flutter_main/utils/console.dart';
+import 'package:flutter_main/utils/dir_path.dart';
 import 'package:flutter_main/utils/list_utils.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:version/version.dart';
 
 WebDirInfo? unzip(String zipFilePath, String fileName) {
@@ -40,10 +40,10 @@ WebDirInfo? unzip(String zipFilePath, String fileName) {
 }
 
 checkUpgrade(List<WebDirInfo> webAssetsInfoList) async {
-  const fileUrl = 'http://192.168.70.100:8080/dist.zip';
+  const fileUrl = 'http://192.168.222.19:8080/dist.zip';
 
   // 代码存放目录
-  final dirPath = join((await getTemporaryDirectory()).path, 'www');
+  final dirPath = join(await temporaryDirPath(), 'www');
   final fileName = basename(fileUrl);
 
   try {

@@ -5,19 +5,22 @@ import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 enum MethodName {
   toast('toast'),
-  request('request'),
   reload('reload'),
   navPop('navPop'),
   qrcode('qrcode'),
   assets('assets'),
+  upload('upload'),
   deviceInfo('deviceInfo'),
   openCamera('openCamera'),
+  httpRequest('httpRequest'),
   pickerPhoto('pickerPhoto'),
   networkInfo('networkInfo'),
+  fileDownload('fileDownload'),
   connectivity('connectivity'),
   setLocalStorage('setLocalStorage'),
   getLocalStorage('getLocalStorage'),
   clearLocalStroge('clearLocalStroge'),
+  localNotification('localNotification'),
   removeLocalStroge('removeLocalStroge'),
   setNavigationBarColor('setNavigationBarColor');
 
@@ -80,8 +83,17 @@ class WebviewMsg {
       case 'setNavigationBarColor':
         methodName = MethodName.setNavigationBarColor;
         break;
-      case 'request':
-        methodName = MethodName.request;
+      case 'httpRequest':
+        methodName = MethodName.httpRequest;
+        break;
+      case 'localNotification':
+        methodName = MethodName.localNotification;
+        break;
+      case 'upload':
+        methodName = MethodName.upload;
+        break;
+      case 'fileDownload':
+        methodName = MethodName.fileDownload;
         break;
       default:
     }
@@ -93,6 +105,44 @@ class WebviewMsg {
     data['sessionId'] = sessionId;
     data['methodName'] = methodName;
     data['params'] = params;
+    return data;
+  }
+}
+
+class SetLocalStorage {
+  String? key;
+  String? value;
+
+  SetLocalStorage({this.key, this.value});
+
+  SetLocalStorage.fromJson(Map<String, dynamic> json) {
+    key = json['key'];
+    value = json['value'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['key'] = key;
+    data['value'] = value;
+    return data;
+  }
+}
+
+class LoadFile {
+  String? path;
+  String? id;
+
+  LoadFile({this.path, this.id});
+
+  LoadFile.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    path = json['path'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['path'] = path;
     return data;
   }
 }
@@ -282,5 +332,32 @@ class HttpRequestConfig {
     data['data'] = this.data;
     data['timeout'] = timeout;
     return data;
+  }
+}
+
+class LocalNotificationParams {
+  late final String? title;
+  late final String? body;
+  late final String? payload;
+
+  LocalNotificationParams({this.title, this.body, this.payload});
+
+  LocalNotificationParams.fromJson(Map<String, dynamic> json) {
+    body = json['body'];
+    title = json['title'];
+    payload = json['payload'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['body'] = body;
+    data['title'] = title;
+    data['payload'] = payload;
+    return data;
+  }
+
+  @override
+  String toString() {
+    return toJson().toString();
   }
 }

@@ -84,7 +84,7 @@ class WebviewState extends State<Webview> {
       },
       child: InAppWebView(
         key: webViewKey,
-        initialUrlRequest: URLRequest(url: WebUri("http://192.168.70.100:8080")),
+        initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.19:8080")),
         // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
         initialSettings: InAppWebViewSettings(
           minimumFontSize: 0, // 设置webview最小字体
@@ -118,7 +118,7 @@ class WebviewState extends State<Webview> {
         shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
           final reqUrl = WebUri('${request.url}');
           final origin = '${reqUrl.scheme}://${reqUrl.host}';
-          if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl.path);
+          if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl);
           return null;
         },
       ),

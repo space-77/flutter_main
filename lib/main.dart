@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_main/common/checkUpgrade.dart';
@@ -9,8 +11,15 @@ import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 // adb connect 192.168.8.100:41599
 
 Future main() async {
+  late final SystemUiOverlayStyle style;
+  if (Platform.isAndroid) {
+    style = const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.dark);
+  } else {
+    style = SystemUiOverlayStyle.dark;
+  }
+
   // 设置状态栏文字颜色
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+  SystemChrome.setSystemUIOverlayStyle(style);
 
   WidgetsFlutterBinding.ensureInitialized();
   // await Permission.camera.request();

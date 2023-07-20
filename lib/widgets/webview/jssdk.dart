@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_main/common/notification.dart';
 import 'package:flutter_main/services/client.dart';
 import 'package:flutter_main/utils/console.dart';
+import 'package:flutter_main/utils/dir_path.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mime/mime.dart';
 import 'package:nb_utils/nb_utils.dart' as nb;
@@ -16,6 +19,7 @@ import 'package:flutter_main/views/qrCodeView.dart';
 import 'package:flutter_main/types/bridgeValue.dart';
 import 'package:flutter_main/types/postMessage.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
@@ -23,6 +27,7 @@ class _Base {
   final strogeKey = 'maxrockyInApp';
   final WebDirInfo indexDir;
   final InAppWebViewController controller;
+  final localNotifications = FlutterLocalNotificationsPlugin();
 
   BuildContext get context {
     return navigatorKey.currentState!.context;
@@ -72,17 +77,22 @@ class _Base {
     return null;
   }
 
-  Future<WebResourceResponse?> loadFile4Id(String id) async {
-    final asset = await AssetEntity.fromId(id);
-    if (asset == null) return null;
+  Future<WebResourceResponse?> loadFile4Url(WebUri url) async {
+    final query = LoadFile.fromJson(url.queryParameters);
+    final id = query.id;
+    final filePath = query.path;
 
-    final data = await (await asset.file)?.readAsBytes();
-    return WebResourceResponse(data: data, statusCode: 200, reasonPhrase: 'OK', contentType: asset.mimeType);
-    // try {
-    // } catch (e) {
-    //   console.error(e);
-    // }
-    // return null;
+    if (id != null) {
+      final asset = await AssetEntity.fromId(id);
+      if (asset == null) return null;
+
+      final data = await (await asset.file)?.readAsBytes();
+      return WebResourceResponse(data: data, statusCode: 200, reasonPhrase: 'OK', contentType: asset.mimeType);
+    } else if (filePath != null) {
+      return await loadAssetsFile(filePath);
+    }
+
+    return null;
   }
 
   Future<WebResourceResponse?> loadFile(String path) async {
@@ -100,17 +110,38 @@ class _Base {
     return null;
   }
 
-  Future<WebResourceResponse?> analyzingScheme(String path) async {
-    // late final WebviewMsg req;
-    if (isWithin(assetsPaht, path)) {
-      // return loadFile(path.replaceFirst(schemeFilePaht, ''));
-      return loadFile4Id(path.replaceFirst('$assetsPaht/', ''));
-    }
-    return loadAssetsFile(path.replaceFirst('/', ''));
+  Future<WebResourceResponse?> analyzingScheme(WebUri url) async {
+    final path = url.path;
+    if (assetsPaht == path) return await loadFile4Url(url);
+    return await loadAssetsFile(path.replaceFirst('/', ''));
   }
 
-  path2AssetScheme(String url) {
-    return '$schemeBase$assetsPaht$url';
+  path2AssetScheme({String? id, String? path}) {
+    final idStr = id != null ? 'id=$id' : '';
+    var pathStr = path != null ? 'path=$path' : '';
+    if (pathStr != '') pathStr = idStr != '' ? '&$pathStr' : pathStr;
+
+    return '$schemeBase$assetsPaht?$idStr$pathStr';
+  }
+
+  localNotificationCallH5(NotificationResponseType type, String? payload) {
+    final t =
+        type == NotificationResponseType.selectedNotification ? 'selectedNotification' : 'selectedNotificationAction';
+    final params = {'type': t, 'payload': payload};
+    controller.evaluateJavascript(source: '''
+      try {
+        if (window.flutter_inappwebview && typeof window.flutter_inappwebview.onDidReceiveNotificationResponse === 'function' ) {
+          window.flutter_inappwebview.onDidReceiveNotificationResponse(${json.encode(params)});
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    ''');
+  }
+
+  Map<String, dynamic> _passParams(String? params) {
+    if (params == '' || params == null) params = '{}';
+    return json.decode(params);
   }
 }
 
@@ -164,11 +195,20 @@ class Jssdk extends _Base {
         case MethodName.setNavigationBarColor:
           data = setNavigationBarColor(event);
           break;
-        case MethodName.request:
+        case MethodName.httpRequest:
           data = await httpRequest(event);
           break;
+        case MethodName.localNotification:
+          data = await localNotification(event.params);
+          break;
+        case MethodName.upload:
+          data = await upload(event);
+          break;
+        case MethodName.fileDownload:
+          data = await fileDownload(event);
+          break;
         default:
-          data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "'404. not find'");
+          data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "'404. not find api: ${event.api}'");
       }
     } catch (e) {
       console.error(e);
@@ -210,13 +250,11 @@ class Jssdk extends _Base {
 
   /// 存储数据
   Future<BridgeValue> setLocalStorage(WebviewMsg event) async {
-    final info = json.decode(event.params ?? '');
-    final key = info['key'];
-    final value = info['value'];
+    final info = SetLocalStorage.fromJson(_passParams(event.params));
+    final key = info.key;
+    final value = info.value;
 
-    if (key == null || value == null) {
-      return BridgeValue(code: -1, msg: 'not find key or not find value');
-    }
+    if (key == null || value == null) return BridgeValue(code: -1, msg: 'not find key or not find value');
 
     final prefs = await storage;
     prefs.setString(getStrogeKey(key), value);
@@ -274,10 +312,8 @@ class Jssdk extends _Base {
 
   /// 打开相册读取图片
   Future<BridgeValue> pickerPhoto(WebviewMsg event) async {
-    var params = event.params;
-    if (params == '' || params == null) params = '{}';
     try {
-      final photoParams = PhotoParams.fromJson(json.decode(params));
+      final photoParams = PhotoParams.fromJson(_passParams(event.params));
       final ids = photoParams.selectedAssetIds;
       final maxAssets = photoParams.maxAssets ?? 9;
       final themeColor = photoParams.themeColor;
@@ -304,7 +340,7 @@ class Jssdk extends _Base {
               width: ${i.width},
               height: ${i.height},
               mimeType: "${i.mimeType}",
-              path: "${path2AssetScheme('/${i.id}')}"
+              path: "${path2AssetScheme(id: i.id)}"
             }''';
           }).toList() ??
           [];
@@ -317,10 +353,7 @@ class Jssdk extends _Base {
 
   /// 打开相机
   Future<BridgeValue> openCamera(WebviewMsg event) async {
-    var params = event.params;
-    if (params == '' || params == null) params = '{}';
-
-    final cameraParams = CameraParams.fromJson(json.decode(params));
+    final cameraParams = CameraParams.fromJson(_passParams(event.params));
     final enableAudio = cameraParams.enableAudio;
     final enableRecording = cameraParams.enableRecording;
     final enableTapRecording = cameraParams.enableTapRecording;
@@ -347,7 +380,7 @@ class Jssdk extends _Base {
       width: ${photo.width},
       height: ${photo.height},
       mimeType: "${photo.mimeType}",
-      path: "${path2AssetScheme('/${photo.id}')}"
+      path: "${path2AssetScheme(id: photo.id)}"
     }''';
 
     return BridgeValue(code: 0, data: photoInfo);
@@ -361,9 +394,7 @@ class Jssdk extends _Base {
 
   /// toast
   BridgeValue toast(WebviewMsg event) {
-    var params = event.params;
-    if (params == '' || params == null) params = '{}';
-    final tosatParams = ToastParams.fromJson(json.decode(params));
+    final tosatParams = ToastParams.fromJson(_passParams(event.params));
 
     Fluttertoast.showToast(
       msg: tosatParams.msg,
@@ -462,13 +493,72 @@ class Jssdk extends _Base {
     }
   }
 
+  /// 网络请求
   Future<BridgeValue> httpRequest(WebviewMsg event) async {
-    var params = event.params;
-    if (params == '' || params == null) params = '{}';
-
-    final config = HttpRequestConfig.fromJson(json.decode(params));
+    final config = HttpRequestConfig.fromJson(_passParams(event.params));
     final res = await request(config);
+    final data = {'data': res.data, 'status': res.statusCode};
 
-    return BridgeValue(code: 0, data: '`${json.encode(res)}`');
+    return BridgeValue(code: 0, data: '`${json.encode(data)}`');
+  }
+
+  /// 本地通知
+  Future<BridgeValue> localNotification(String? param, [int? id]) async {
+    final params = LocalNotificationParams.fromJson(_passParams(param));
+    await notification.send(params, localNotificationCallH5, id: id);
+    return BridgeValue(code: 0);
+  }
+
+  /// 文件上传
+  Future<BridgeValue> upload(WebviewMsg event) async {
+    // final dirPath = join(await temporaryDirPath(), 'file');
+    // final fileName = basename(fileUrl);
+    // final params = LocalNotificationParams.fromJson(_passParams(event.params));
+    // await notification.send(params, localNotificationCallH5);
+
+    return BridgeValue(code: 0);
+  }
+
+  /// 文件下载
+  Future<BridgeValue> fileDownload(WebviewMsg event) async {
+    final config = HttpRequestConfig.fromJson(_passParams(event.params));
+    final fileUrl = config.url;
+    if (fileUrl.validateURL()) {
+      final dirPath = join(await temporaryDirPath(), 'file');
+      final fileName = basename(fileUrl);
+      try {
+        // TODO 通知提醒
+        final savePath = join(dirPath, fileName);
+        final id = DateTime.now().millisecondsSinceEpoch >> 10;
+        dio.download(
+          fileUrl,
+          savePath,
+          data: config.data,
+          options: getOptions(config),
+          queryParameters: config.params,
+          onReceiveProgress: (int count, int total) {
+            final prs = ((count / total) * 100).toInt();
+            final payload = json.encode({
+              'savePath': savePath,
+              'localUrl': prs < 100 ? 'null' : '${path2AssetScheme(path: savePath)}',
+              'status': prs < 100 ? 'downloading' : 'done',
+            });
+
+            final notif = '''{
+              "title": "文件下载中...",
+              "body": "$fileName: 下载进度$prs%", 
+              "payload": "$payload"
+            }''';
+
+            localNotification(notif, id);
+          },
+        );
+        return BridgeValue(code: 0);
+      } catch (e) {
+        return BridgeValue(code: 500, msg: "'File download failed.'", error: '`${e.toString()}`');
+      }
+    } else {
+      return BridgeValue(code: 400, msg: "'The URL does not exist or is not standardized.'");
+    }
   }
 }
