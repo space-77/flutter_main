@@ -68,7 +68,7 @@ class _MyAppState extends State<MyApp> {
             onSubmitted: (value) {
               var url = WebUri(value);
               if (url.scheme.isEmpty) {
-                url = WebUri("https://www.google.com/search?q=" + value);
+                url = WebUri("https://baidu.com/search?q=" + value);
               }
               webViewController?.loadUrl(urlRequest: URLRequest(url: url));
             },
@@ -78,7 +78,7 @@ class _MyAppState extends State<MyApp> {
               children: [
                 InAppWebView(
                   key: webViewKey,
-                  initialUrlRequest: URLRequest(url: WebUri("http://192.168.8.122:8080")),
+                  initialUrlRequest: URLRequest(url: WebUri("https://baidu.com/")),
                   initialSettings: settings,
                   pullToRefreshController: pullToRefreshController,
                   onWebViewCreated: (controller) {
@@ -91,8 +91,6 @@ class _MyAppState extends State<MyApp> {
                     });
                   },
                   onPermissionRequest: (controller, request) async {
-                    console.log('-------------');
-                    console.log('-------------');
                     console.log('-------------');
                     // console.log(controller.getUrl());
                     return PermissionResponse(resources: request.resources, action: PermissionResponseAction.GRANT);
