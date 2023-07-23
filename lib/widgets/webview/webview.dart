@@ -117,18 +117,6 @@ class WebviewState extends State<Webview> {
             loadDone = progress >= 100;
           });
         },
-        onUpdateVisitedHistory: (controller, url, isReload) {},
-        shouldOverrideUrlLoading: (controller, navigationAction) async {
-          final method = navigationAction.request.method;
-          final body = navigationAction.request.body;
-          final url = navigationAction.request.url;
-          // assert(url!.path == '');
-
-          console.log('+++++++++++++++');
-          console.log(url);
-          console.log('+++++++++++++++');
-          return null;
-        },
         shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
           final reqUrl = WebUri('${request.url}');
           final origin = '${reqUrl.scheme}://${reqUrl.host}';
