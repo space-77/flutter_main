@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
+// import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_main/common/notification.dart';
@@ -19,7 +22,6 @@ import 'package:flutter_main/views/qrCodeView.dart';
 import 'package:flutter_main/types/bridgeValue.dart';
 import 'package:flutter_main/types/postMessage.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
@@ -201,22 +203,23 @@ class Jssdk extends _Base {
         case MethodName.localNotification:
           data = await localNotification(event.params);
           break;
-        case MethodName.upload:
-          data = await upload(event);
+        case MethodName.fileUpload:
+          data = await fileUpload(event);
           break;
         case MethodName.fileDownload:
           data = await fileDownload(event);
           break;
         default:
-          data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "'404. not find api: ${event.api}'");
+          data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "404. not find api: ${event.api}");
       }
+      data.msg = "'${data.msg}'";
     } catch (e) {
       console.error(e);
       data = BridgeValue(
         code: 500,
         sessionId: event.sessionId,
         error: "`${e.toString()}`",
-        msg: "'Handling information exceptions.'",
+        msg: "Handling information exceptions.",
       );
     }
 
@@ -473,7 +476,7 @@ class Jssdk extends _Base {
   /// 设置状态栏文字颜色
   BridgeValue setNavigationBarColor(WebviewMsg event) {
     final type = event.params;
-    final err = BridgeValue(code: 500, msg: "'The parameter can only be dark or light.'");
+    final err = BridgeValue(code: 500, msg: "The parameter can only be dark or light.");
 
     if (type == 'dark' || type == 'light') {
       late final SystemUiOverlayStyle color;
@@ -510,13 +513,34 @@ class Jssdk extends _Base {
   }
 
   /// 文件上传
-  Future<BridgeValue> upload(WebviewMsg event) async {
-    // final dirPath = join(await temporaryDirPath(), 'file');
-    // final fileName = basename(fileUrl);
-    // final params = LocalNotificationParams.fromJson(_passParams(event.params));
-    // await notification.send(params, localNotificationCallH5);
+  Future<BridgeValue> fileUpload(WebviewMsg event) async {
+    final String? url = event.params;
+    if (url == null) return BridgeValue(code: 404, msg: "file path is not find.");
+    final config = HttpRequestConfig(url: url, responseType: ResponseType.bytes);
+    // try {
+    //   final res = await request(config);
 
-    return BridgeValue(code: 0);
+    //   console.log(res);
+
+    //   return BridgeValue(code: 0);
+    // } catch (e) {
+    //   return BridgeValue(code: 500, msg: "file is not find.", error: '`${e.toString()}`');
+    // }
+
+    try {
+      // 解析 data URL，获取 Blob 数据部分
+      var dataUri = Uri.parse(config.url);
+      var mimeType = dataUri.pathSegments[0];
+      var base64Data = dataUri.pathSegments[1];
+
+      // 将 base64 编码的数据解码为字节列表
+      final res = base64Decode(base64Data);
+      return BridgeValue(code: 0);
+    } catch (e) {
+      // 处理异常
+      print('Error fetching Blob data: $e');
+      throw Exception('Error fetching Blob data');
+    }
   }
 
   /// 文件下载
@@ -527,7 +551,6 @@ class Jssdk extends _Base {
       final dirPath = join(await temporaryDirPath(), 'file');
       final fileName = basename(fileUrl);
       try {
-        // TODO 通知提醒
         final savePath = join(dirPath, fileName);
         final id = DateTime.now().millisecondsSinceEpoch >> 10;
         dio.download(
@@ -555,10 +578,10 @@ class Jssdk extends _Base {
         );
         return BridgeValue(code: 0);
       } catch (e) {
-        return BridgeValue(code: 500, msg: "'File download failed.'", error: '`${e.toString()}`');
+        return BridgeValue(code: 500, msg: "File download failed.", error: '`${e.toString()}`');
       }
     } else {
-      return BridgeValue(code: 400, msg: "'The URL does not exist or is not standardized.'");
+      return BridgeValue(code: 400, msg: "The URL does not exist or is not standardized.");
     }
   }
 }

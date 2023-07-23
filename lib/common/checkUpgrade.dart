@@ -69,9 +69,9 @@ Future<WebDirInfo> init() async {
   final webAssetsInfoStr = prefs.getStringList(webAssetsInfoListkey) ?? [];
   final webAssetsInfoList = webAssetsInfoStr.map((e) => WebDirInfo.fromJson(json.decode(e))).toList();
 
-  if (webAssetsInfoList.find((item) => item.version == version) == null) {
-    checkUpgrade(webAssetsInfoList);
-  }
+  // if (webAssetsInfoList.find((item) => item.version == version) == null) {
+  //   checkUpgrade(webAssetsInfoList);
+  // }
 
   late final WebDirInfo webFileInfo;
   try {

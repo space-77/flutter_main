@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_main/utils/console.dart';
 import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/types/postMessage.dart';
@@ -84,9 +83,13 @@ class WebviewState extends State<Webview> {
       },
       child: InAppWebView(
         key: webViewKey,
-        initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.19:8080")),
+        initialUrlRequest: URLRequest(url: WebUri("http://192.168.8.122:8080")),
         // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
         initialSettings: InAppWebViewSettings(
+          disableHorizontalScroll: true,
+          useShouldOverrideUrlLoading: true,
+          horizontalScrollBarEnabled: false,
+
           minimumFontSize: 0, // 设置webview最小字体
           applicationNameForUserAgent: 'maxrockyWebView',
         ),
@@ -115,6 +118,17 @@ class WebviewState extends State<Webview> {
           });
         },
         onUpdateVisitedHistory: (controller, url, isReload) {},
+        shouldOverrideUrlLoading: (controller, navigationAction) async {
+          final method = navigationAction.request.method;
+          final body = navigationAction.request.body;
+          final url = navigationAction.request.url;
+          // assert(url!.path == '');
+
+          console.log('+++++++++++++++');
+          console.log(url);
+          console.log('+++++++++++++++');
+          return null;
+        },
         shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
           final reqUrl = WebUri('${request.url}');
           final origin = '${reqUrl.scheme}://${reqUrl.host}';

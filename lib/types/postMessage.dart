@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_main/utils/color_utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -9,7 +10,7 @@ enum MethodName {
   navPop('navPop'),
   qrcode('qrcode'),
   assets('assets'),
-  upload('upload'),
+  fileUpload('fileUpload'),
   deviceInfo('deviceInfo'),
   openCamera('openCamera'),
   httpRequest('httpRequest'),
@@ -89,8 +90,8 @@ class WebviewMsg {
       case 'localNotification':
         methodName = MethodName.localNotification;
         break;
-      case 'upload':
-        methodName = MethodName.upload;
+      case 'fileUpload':
+        methodName = MethodName.fileUpload;
         break;
       case 'fileDownload':
         methodName = MethodName.fileDownload;
@@ -308,11 +309,13 @@ class HttpRequestConfig {
   late final String url;
   late final String? method;
   late final Duration? timeout;
+  late final ResponseType? responseType;
   late final Map<String, dynamic>? data;
   late final Map<String, dynamic>? params;
   late final Map<String, dynamic>? headers;
 
-  HttpRequestConfig({required this.url, this.method, this.headers, this.params, this.data, this.timeout});
+  HttpRequestConfig(
+      {required this.url, this.method, this.headers, this.params, this.data, this.timeout, this.responseType});
 
   HttpRequestConfig.fromJson(Map<String, dynamic> json) {
     url = json['url'];
@@ -321,6 +324,20 @@ class HttpRequestConfig {
     headers = json['headers'];
     params = json['params'];
     timeout = json['timeout'] != null ? Duration(milliseconds: json['timeout']) : null;
+    switch (json['responseType']) {
+      case 'bytes':
+        responseType = ResponseType.bytes;
+        break;
+      case 'plain':
+        responseType = ResponseType.plain;
+        break;
+      case 'stream':
+        responseType = ResponseType.stream;
+        break;
+      case 'json':
+      default:
+        responseType = ResponseType.json;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -331,6 +348,7 @@ class HttpRequestConfig {
     data['params'] = params;
     data['data'] = this.data;
     data['timeout'] = timeout;
+    data['responseType'] = responseType;
     return data;
   }
 }
