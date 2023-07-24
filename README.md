@@ -7,6 +7,8 @@ H5 壳应用
 2. upload
 3. download
 4. 文件预览 open_file
+5. 震动
+6. 位置
 
 ## 已知问题
 
