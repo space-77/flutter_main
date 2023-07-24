@@ -36,7 +36,6 @@ dependencies:
   cupertino_icons: ^1.0.2
   shared_preferences: ^2.2.0
   qr_code_scanner: ^1.0.1
-  flutter_inappwebview: ^6.0.0-beta.24+1
   mime: ^1.0.4
   path: ^1.8.3
   flutter_file_downloader: ^1.1.2
@@ -52,7 +51,12 @@ dependencies:
   network_info_plus: ^4.0.1
   connectivity_plus: ^4.0.1
   flutter_local_notifications: ^15.1.0+1
+
+  # webview
+  flutter_inappwebview: ^6.0.0-beta.24+1
   webview_flutter: ^4.2.2
+  webview_flutter_android: ^3.9.1
+  webview_flutter_wkwebview: ^3.7.1
 
 dev_dependencies:
 

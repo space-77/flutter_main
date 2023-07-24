@@ -6,6 +6,7 @@ import 'package:flutter_main/common/checkUpgrade.dart';
 import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/types/webDirInfo.dart';
 import 'package:flutter_main/views/dev_webview_page.dart';
+import 'package:flutter_main/widgets/webview2/webview2.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 // adb pair 192.168.10.52:42225
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
       ),
       home: DevWebiewPage(indexDir),
       // home: PickImages(),
+      // home: const Webview2(url: 'http://192.168.222.19:8080'),
     );
   }
 }

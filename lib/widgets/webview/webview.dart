@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
@@ -61,6 +62,20 @@ class WebviewState extends State<Webview> {
         }
       },
     );
+    webViewController.addJavaScriptHandler(
+      handlerName: 'upload',
+      callback: (args) {
+        try {
+          // final String? message = args[0];
+          console.log(args);
+          // if (message == null || message == '') return;
+          // final event = WebviewMsg.fromJson(json.decode(message));
+          // jssdk.handler(event);
+        } catch (e) {
+          console.error(e);
+        }
+      },
+    );
   }
 
   @override
@@ -83,12 +98,12 @@ class WebviewState extends State<Webview> {
       },
       child: InAppWebView(
         key: webViewKey,
-        initialUrlRequest: URLRequest(url: WebUri("http://192.168.8.122:8080")),
+        initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.19:8080")),
         // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
         initialSettings: InAppWebViewSettings(
           disableHorizontalScroll: true,
-          useShouldOverrideUrlLoading: true,
           horizontalScrollBarEnabled: false,
+          useShouldOverrideUrlLoading: true,
 
           minimumFontSize: 0, // 设置webview最小字体
           applicationNameForUserAgent: 'maxrockyWebView',
@@ -116,6 +131,20 @@ class WebviewState extends State<Webview> {
           setState(() {
             loadDone = progress >= 100;
           });
+        },
+        shouldInterceptFetchRequest: (controller, fetchRequest) async {
+          try {
+            if (fetchRequest.body is List) {
+              final List<int> body = fetchRequest.body.cast<int>();
+              final file = File.fromRawPath(Uint8List.fromList(body));
+
+              // final file = MultipartFile.fromBytes(body).finalize();
+              console.log(file);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+          return null;
         },
         shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
           final reqUrl = WebUri('${request.url}');
