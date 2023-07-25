@@ -102,6 +102,7 @@ class WebviewState extends State<Webview> {
         // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
         initialSettings: InAppWebViewSettings(
           disableHorizontalScroll: true,
+          useShouldInterceptRequest: true,
           horizontalScrollBarEnabled: false,
           useShouldOverrideUrlLoading: true,
 
@@ -132,13 +133,13 @@ class WebviewState extends State<Webview> {
             loadDone = progress >= 100;
           });
         },
+
+        // 拦截 webview fetch 请求
         shouldInterceptFetchRequest: (controller, fetchRequest) async {
           try {
             if (fetchRequest.body is List) {
               final List<int> body = fetchRequest.body.cast<int>();
               final file = File.fromRawPath(Uint8List.fromList(body));
-
-              // final file = MultipartFile.fromBytes(body).finalize();
               console.log(file);
             }
           } catch (e) {
