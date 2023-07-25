@@ -97,63 +97,80 @@ class WebviewState extends State<Webview> {
         return res?.value ?? true;
       },
       child: InAppWebView(
-        key: webViewKey,
-        initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.19:8080")),
-        // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
-        initialSettings: InAppWebViewSettings(
-          disableHorizontalScroll: true,
-          useShouldInterceptRequest: true,
-          horizontalScrollBarEnabled: false,
-          useShouldOverrideUrlLoading: true,
+          key: webViewKey,
+          // initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.19:8080")),
+          initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
+          initialSettings: InAppWebViewSettings(
+            disableHorizontalScroll: true,
+            useShouldInterceptRequest: true,
+            horizontalScrollBarEnabled: false,
 
-          minimumFontSize: 0, // 设置webview最小字体
-          applicationNameForUserAgent: 'maxrockyWebView',
-        ),
-        initialUserScripts: UnmodifiableListView<UserScript>([]),
-        pullToRefreshController: pullToRefreshController,
-        onWebViewCreated: (controller) {
-          webViewController = controller;
-          jssdk = Jssdk(controller, widget.indexDir);
-          onEventListener();
-        },
-        onLoadStart: (controller, url) {
-          if (widget.onUrlChanged != null) widget.onUrlChanged!(url.toString());
-        },
-        onLoadStop: (controller, url) async {
-          pullToRefreshController?.endRefreshing();
-        },
-        onProgressChanged: (controller, progress) {
-          if (progress == 100) {
+            resourceCustomSchemes: [scheme],
+            // useShouldOverrideUrlLoading: true,
+
+            minimumFontSize: 0, // 设置webview最小字体
+            applicationNameForUserAgent: 'maxrockyWebView',
+          ),
+          initialUserScripts: UnmodifiableListView<UserScript>([]),
+          pullToRefreshController: pullToRefreshController,
+          onWebViewCreated: (controller) {
+            webViewController = controller;
+            jssdk = Jssdk(controller, widget.indexDir);
+            onEventListener();
+          },
+          onLoadStart: (controller, url) {
+            if (widget.onUrlChanged != null) widget.onUrlChanged!(url.toString());
+          },
+          onLoadStop: (controller, url) async {
             pullToRefreshController?.endRefreshing();
-            // 修复 多次触发 Ready 方法 问题
-            if (!loadDone && progress == 100) jssdk.onMaxrockyReady();
-          }
-
-          setState(() {
-            loadDone = progress >= 100;
-          });
-        },
-
-        // 拦截 webview fetch 请求
-        shouldInterceptFetchRequest: (controller, fetchRequest) async {
-          try {
-            if (fetchRequest.body is List) {
-              final List<int> body = fetchRequest.body.cast<int>();
-              final file = File.fromRawPath(Uint8List.fromList(body));
-              console.log(file);
+          },
+          onProgressChanged: (controller, progress) {
+            if (progress == 100) {
+              pullToRefreshController?.endRefreshing();
+              // 修复 多次触发 Ready 方法 问题
+              if (!loadDone && progress == 100) jssdk.onMaxrockyReady();
             }
-          } catch (e) {
-            console.error(e);
-          }
-          return null;
-        },
-        shouldInterceptRequest: (InAppWebViewController controller, WebResourceRequest request) async {
-          final reqUrl = WebUri('${request.url}');
-          final origin = '${reqUrl.scheme}://${reqUrl.host}';
-          if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl);
-          return null;
-        },
-      ),
+
+            setState(() {
+              loadDone = progress >= 100;
+            });
+          },
+
+          // 拦截 webview fetch 请求
+          shouldInterceptFetchRequest: (controller, fetchRequest) async {
+            try {
+              if (fetchRequest.body is List) {
+                final List<int> body = fetchRequest.body.cast<int>();
+                final file = File.fromRawPath(Uint8List.fromList(body));
+                console.log(file);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+            return null;
+          },
+
+          /// 安卓资源请求拦截
+          shouldInterceptRequest: (controller, request) async {
+            final reqUrl = WebUri('${request.url}');
+            final origin = '${reqUrl.scheme}://${reqUrl.host}';
+            if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl);
+            return null;
+          },
+
+          /// iOS Scheme
+          onLoadResourceWithCustomScheme: (controller, request) async {
+            final reqUrl = WebUri('${request.url}');
+            final origin = '${reqUrl.scheme}://${reqUrl.host}';
+
+            console.log(origin == schemeBase);
+
+            if (origin == schemeBase) {
+              // TODO 返回对应资源 CustomSchemeResponse
+              // return jssdk.analyzingScheme(reqUrl);
+            }
+            return null;
+          }),
     );
   }
 }

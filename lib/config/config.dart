@@ -8,7 +8,8 @@ final Future<SharedPreferences> storage = SharedPreferences.getInstance();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // const apiPaht = '/apis';
-const schemeBase = 'jsbridge://maxrocky.app';
+const scheme = 'jsbridge';
+const schemeBase = '$scheme://maxrocky.app';
 const assetsPaht = '/apis/files/assets'; // 通过 scheme 获取资源前缀
 const assetsPaht4Url = 'file';
 const WEB_ASSETS_PATH = 'assets/www';
