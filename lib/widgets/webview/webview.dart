@@ -78,6 +78,13 @@ class WebviewState extends State<Webview> {
     );
   }
 
+  loadResource(InAppWebViewController controller, WebResourceRequest request) async {
+    final url = request.url;
+    final origin = '${url.scheme}://${url.host}';
+    if (origin == schemeBase) return jssdk.analyzingScheme(url);
+    return null;
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -164,6 +171,8 @@ class WebviewState extends State<Webview> {
             final origin = '${reqUrl.scheme}://${reqUrl.host}';
 
             console.log(origin == schemeBase);
+
+            loadResource(controller, request);
 
             if (origin == schemeBase) {
               // TODO 返回对应资源 CustomSchemeResponse
