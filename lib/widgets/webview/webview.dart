@@ -78,7 +78,7 @@ class WebviewState extends State<Webview> {
     );
   }
 
-  loadResource(InAppWebViewController controller, WebResourceRequest request) async {
+  Future<WebResourceResponse?> loadResource(InAppWebViewController controller, WebResourceRequest request) async {
     final url = request.url;
     final origin = '${url.scheme}://${url.host}';
     if (origin == schemeBase) return jssdk.analyzingScheme(url);
@@ -108,12 +108,11 @@ class WebviewState extends State<Webview> {
           // initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.19:8080")),
           initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
           initialSettings: InAppWebViewSettings(
+            resourceCustomSchemes: [scheme],
+
             disableHorizontalScroll: true,
             useShouldInterceptRequest: true,
             horizontalScrollBarEnabled: false,
-
-            resourceCustomSchemes: [scheme],
-            // useShouldOverrideUrlLoading: true,
 
             minimumFontSize: 0, // 设置webview最小字体
             applicationNameForUserAgent: 'maxrockyWebView',
@@ -143,7 +142,7 @@ class WebviewState extends State<Webview> {
             });
           },
 
-          // 拦截 webview fetch 请求
+          /// 拦截 webview fetch 请求
           shouldInterceptFetchRequest: (controller, fetchRequest) async {
             try {
               if (fetchRequest.body is List) {
@@ -158,25 +157,17 @@ class WebviewState extends State<Webview> {
           },
 
           /// 安卓资源请求拦截
-          shouldInterceptRequest: (controller, request) async {
-            final reqUrl = WebUri('${request.url}');
-            final origin = '${reqUrl.scheme}://${reqUrl.host}';
-            if (origin == schemeBase) return jssdk.analyzingScheme(reqUrl);
-            return null;
-          },
+          shouldInterceptRequest: loadResource,
 
-          /// iOS Scheme
+          /// iOS Scheme 请求拦截
           onLoadResourceWithCustomScheme: (controller, request) async {
-            final reqUrl = WebUri('${request.url}');
-            final origin = '${reqUrl.scheme}://${reqUrl.host}';
-
-            console.log(origin == schemeBase);
-
-            loadResource(controller, request);
-
-            if (origin == schemeBase) {
-              // TODO 返回对应资源 CustomSchemeResponse
-              // return jssdk.analyzingScheme(reqUrl);
+            final res = await loadResource(controller, request);
+            if (res != null && res.data != null) {
+              return CustomSchemeResponse(
+                data: res.data!,
+                contentType: res.contentType!,
+                contentEncoding: res.contentEncoding!,
+              );
             }
             return null;
           }),
