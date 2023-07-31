@@ -18,6 +18,8 @@ enum MethodName {
   networkInfo('networkInfo'),
   fileDownload('fileDownload'),
   connectivity('connectivity'),
+  getClipboard('getClipboard'),
+  setClipboard('setClipboard'),
   setLocalStorage('setLocalStorage'),
   getLocalStorage('getLocalStorage'),
   clearLocalStroge('clearLocalStroge'),
@@ -95,6 +97,12 @@ class WebviewMsg {
         break;
       case 'fileDownload':
         methodName = MethodName.fileDownload;
+        break;
+      case 'setClipboard':
+        methodName = MethodName.setClipboard;
+        break;
+      case 'getClipboard':
+        methodName = MethodName.getClipboard;
         break;
       default:
     }

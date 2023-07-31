@@ -9,6 +9,7 @@ import 'package:flutter_main/types/postMessage.dart';
 import 'package:flutter_main/types/webDirInfo.dart';
 import 'package:flutter_main/widgets/webview/jssdk.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 class Webview extends StatefulWidget {
   final WebDirInfo indexDir;
@@ -19,7 +20,7 @@ class Webview extends StatefulWidget {
   WebviewState createState() => WebviewState();
 }
 
-class WebviewState extends State<Webview> {
+class WebviewState extends State<Webview> with WidgetsBindingObserver {
   final GlobalKey webViewKey = GlobalKey();
 
   late final Jssdk jssdk;
@@ -34,6 +35,7 @@ class WebviewState extends State<Webview> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     pullToRefreshController = kIsWeb || ![TargetPlatform.iOS, TargetPlatform.android].contains(defaultTargetPlatform)
         ? null
@@ -46,6 +48,12 @@ class WebviewState extends State<Webview> {
               }
             },
           );
+  }
+
+  @override
+  void didChangeAppLifecycleState(state) {
+    super.didChangeAppLifecycleState(state);
+    jssdk.changeAppLifecycleState(state);
   }
 
   onEventListener() {
@@ -88,89 +96,88 @@ class WebviewState extends State<Webview> {
   @override
   void dispose() {
     super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        final res = await webViewController.callAsyncJavaScript(functionBody: '''
-          if (window.flutter_inappwebview && typeof window.flutter_inappwebview.onWillPop === 'function' ) {
-            return window.flutter_inappwebview.onWillPop();
-          }
-          return true;
-        ''');
-
+        final res = await jssdk.onWillPop();
         return res?.value ?? true;
       },
       child: InAppWebView(
-          key: webViewKey,
-          // initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.19:8080")),
-          initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
-          initialSettings: InAppWebViewSettings(
-            resourceCustomSchemes: [scheme],
+        key: webViewKey,
+        initialUrlRequest: URLRequest(url: WebUri("http://192.168.222.96:8080")),
+        // initialUrlRequest: URLRequest(url: WebUri(schemeUrl)),
+        initialSettings: InAppWebViewSettings(
+          resourceCustomSchemes: [scheme],
 
-            disableHorizontalScroll: true,
-            useShouldInterceptRequest: true,
-            horizontalScrollBarEnabled: false,
+          disableHorizontalScroll: true,
+          useShouldInterceptRequest: true,
+          horizontalScrollBarEnabled: false,
 
-            minimumFontSize: 0, // 设置webview最小字体
-            applicationNameForUserAgent: 'maxrockyWebView',
-          ),
-          initialUserScripts: UnmodifiableListView<UserScript>([]),
-          pullToRefreshController: pullToRefreshController,
-          onWebViewCreated: (controller) {
-            webViewController = controller;
-            jssdk = Jssdk(controller, widget.indexDir);
-            onEventListener();
-          },
-          onLoadStart: (controller, url) {
-            if (widget.onUrlChanged != null) widget.onUrlChanged!(url.toString());
-          },
-          onLoadStop: (controller, url) async {
+          minimumFontSize: 0, // 设置webview最小字体
+          applicationNameForUserAgent: 'maxrockyWebView',
+        ),
+        initialUserScripts: UnmodifiableListView<UserScript>([]),
+        pullToRefreshController: pullToRefreshController,
+        onWebViewCreated: (controller) {
+          webViewController = controller;
+          jssdk = Jssdk(controller, widget.indexDir);
+          onEventListener();
+        },
+        onLoadStart: (controller, url) {
+          if (widget.onUrlChanged != null) widget.onUrlChanged!(url.toString());
+        },
+        onLoadStop: (controller, url) async {
+          pullToRefreshController?.endRefreshing();
+        },
+        onProgressChanged: (controller, progress) {
+          if (progress == 100) {
             pullToRefreshController?.endRefreshing();
-          },
-          onProgressChanged: (controller, progress) {
-            if (progress == 100) {
-              pullToRefreshController?.endRefreshing();
-              // 修复 多次触发 Ready 方法 问题
-              if (!loadDone && progress == 100) jssdk.onMaxrockyReady();
+            // 修复 多次触发 Ready 方法 问题
+            if (!loadDone && progress == 100) {
+              jssdk.onMaxrockyReady();
+              FlutterNativeSplash.remove();
             }
+          }
 
-            setState(() {
-              loadDone = progress >= 100;
-            });
-          },
+          setState(() {
+            loadDone = progress >= 100;
+          });
+        },
 
-          /// 拦截 webview fetch 请求
-          shouldInterceptFetchRequest: (controller, fetchRequest) async {
-            try {
-              if (fetchRequest.body is List) {
-                final List<int> body = fetchRequest.body.cast<int>();
-                final file = File.fromRawPath(Uint8List.fromList(body));
-                console.log(file);
-              }
-            } catch (e) {
-              console.error(e);
+        /// 拦截 webview fetch 请求
+        shouldInterceptFetchRequest: (controller, fetchRequest) async {
+          try {
+            if (fetchRequest.body is List) {
+              final List<int> body = fetchRequest.body.cast<int>();
+              final file = File.fromRawPath(Uint8List.fromList(body));
+              console.log(file);
             }
-            return null;
-          },
+          } catch (e) {
+            console.error(e);
+          }
+          return null;
+        },
 
-          /// 安卓资源请求拦截
-          shouldInterceptRequest: loadResource,
+        /// 安卓资源请求拦截
+        shouldInterceptRequest: loadResource,
 
-          /// iOS Scheme 请求拦截
-          onLoadResourceWithCustomScheme: (controller, request) async {
-            final res = await loadResource(controller, request);
-            if (res != null && res.data != null) {
-              return CustomSchemeResponse(
-                data: res.data!,
-                contentType: res.contentType!,
-                contentEncoding: res.contentEncoding!,
-              );
-            }
-            return null;
-          }),
+        /// iOS Scheme 请求拦截
+        onLoadResourceWithCustomScheme: (controller, request) async {
+          final res = await loadResource(controller, request);
+          if (res != null && res.data != null) {
+            return CustomSchemeResponse(
+              data: res.data!,
+              contentType: res.contentType!,
+              contentEncoding: res.contentEncoding!,
+            );
+          }
+          return null;
+        },
+      ),
     );
   }
 }

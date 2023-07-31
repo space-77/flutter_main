@@ -7,6 +7,7 @@ import 'package:flutter_main/config/config.dart';
 import 'package:flutter_main/types/webDirInfo.dart';
 import 'package:flutter_main/views/dev_webview_page.dart';
 import 'package:flutter_main/widgets/webview2/webview2.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 // adb pair 192.168.10.52:42225
@@ -23,10 +24,10 @@ Future main() async {
   // 设置状态栏文字颜色
   SystemChrome.setSystemUIOverlayStyle(style);
 
-  WidgetsFlutterBinding.ensureInitialized();
-  // await Permission.camera.request();
-  // await Permission.microphone.request();
-  // await Permission.storage.request();
+  //
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
   final indexDir = await init();
   runApp(MyApp(indexDir));
   AssetPicker.registerObserve();

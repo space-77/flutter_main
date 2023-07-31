@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:convert';
+// import 'dart:convert';
 // import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
@@ -60,6 +60,49 @@ class _Base {
       } catch (err) {
         console.error('webview onready fail. ', err);
       }
+    ''');
+  }
+
+  /// 监听app进入前后台事件
+  changeAppLifecycleState(AppLifecycleState state) {
+    var type = "";
+
+    switch (state) {
+      //进入应用时候不会触发该状态 应用程序处于可见状态，并且可以响应用户的输入事件。它相当于 Android 中Activity的onResume
+      case AppLifecycleState.resumed:
+        type = 'resumed';
+        break;
+      //应用状态处于闲置状态，并且没有用户的输入事件，
+      // 注意：这个状态切换到 前后台 会触发，所以流程应该是先冻结窗口，然后停止UI
+      case AppLifecycleState.inactive:
+        type = 'inactive';
+        break;
+      //当前页面即将退出
+      case AppLifecycleState.detached:
+        type = 'detached';
+        break;
+      // 应用程序处于不可见状态
+      case AppLifecycleState.paused:
+        type = 'paused';
+        break;
+    }
+
+    console.log(type);
+
+    controller.evaluateJavascript(source: '''
+      if (window.flutter_inappwebview && typeof window.flutter_inappwebview.changeAppLifecycleState === 'function' ) {
+        window.flutter_inappwebview.changeAppLifecycleState("$type");
+      }
+    ''');
+  }
+
+  /// 拦截到返回事件，通知H5处理
+  Future<CallAsyncJavaScriptResult?> onWillPop() async {
+    return await controller.callAsyncJavaScript(functionBody: '''
+      if (window.flutter_inappwebview && typeof window.flutter_inappwebview.onWillPop === 'function' ) {
+        return window.flutter_inappwebview.onWillPop();
+      }
+      return true;
     ''');
   }
 
@@ -208,6 +251,11 @@ class Jssdk extends _Base {
           break;
         case MethodName.fileDownload:
           data = await fileDownload(event);
+          break;
+        case MethodName.setClipboard:
+          data = setClipboard(event);
+        case MethodName.getClipboard:
+          data = await getClipboard(event);
           break;
         default:
           data = BridgeValue(code: 404, sessionId: event.sessionId, msg: "404. not find api: ${event.api}");
@@ -583,5 +631,18 @@ class Jssdk extends _Base {
     } else {
       return BridgeValue(code: 400, msg: "The URL does not exist or is not standardized.");
     }
+  }
+
+  /// 复制内容到粘贴板
+  BridgeValue setClipboard(WebviewMsg event) {
+    final text = event.params;
+    if (text != null) Clipboard.setData(ClipboardData(text: text));
+    return BridgeValue(code: 0);
+  }
+
+  /// 获取粘贴板内容
+  Future<BridgeValue> getClipboard(WebviewMsg event) async {
+    var text = await Clipboard.getData(Clipboard.kTextPlain);
+    return BridgeValue(code: 0, data: "'${text?.text}'");
   }
 }
